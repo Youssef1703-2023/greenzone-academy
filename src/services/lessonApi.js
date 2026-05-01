@@ -1,17 +1,8 @@
 import { getLessonContent as getFallbackLessonContent } from '../data/lessonContentData';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+import { fetchSupabaseLessonContent } from './supabaseContentService';
 
 export async function fetchLessonContent({ courseSlug, phaseId, lessonId, language }) {
-  const url = new URL(`${API_BASE_URL}/courses/${courseSlug}/phases/${phaseId}/lessons/${lessonId}`);
-  url.searchParams.set('lang', language);
-
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`Lesson API failed with status ${response.status}`);
-  }
-
-  return response.json();
+  return fetchSupabaseLessonContent({ courseSlug, phaseId, lessonId, language });
 }
 
 export function getFallbackLessonResponse({ phaseId, lessonId, language, message }) {

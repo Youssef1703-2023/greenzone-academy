@@ -47,9 +47,7 @@ export default function SignUpPage() {
     if (Object.keys(newErrors).length > 0) return;
 
     setIsSubmitting(true);
-    await new Promise((r) => setTimeout(r, 800));
-
-    const result = signup(name.trim(), email.trim(), password);
+    const result = await signup(name.trim(), email.trim(), password);
     if (result.success) {
       navigate('/dashboard');
     } else {

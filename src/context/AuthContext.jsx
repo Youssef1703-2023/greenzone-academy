@@ -1,147 +1,143 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+/* eslint-disable react-refresh/only-export-components */
+import { createContext, useContext, useEffect, useState } from 'react';
+import { supabase, hasSupabaseConfig } from '../services/supabaseClient';
+import {
+  getCurrentSession,
+  signIn,
+  signOut,
+  signUp,
+  updateProfile,
+} from '../services/supabaseAuthService';
 
 const AuthContext = createContext(null);
 
-const STORAGE_KEY = 'greenzone_user';
-const USERS_DB_KEY = 'greenzone_users_db';
+const STORAGE_KEY = 'greenzone_user_fallback';
 
-/* ── Helper Functions ── */
-
-/** Get current logged-in user from localStorage */
-function getCurrentUser() {
+function readFallbackUser() {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      const user = JSON.parse(stored);
-      // Ensure name always exists
-      if (!user.name) user.name = 'Student';
-      return user;
-    }
+    return stored ? JSON.parse(stored) : null;
   } catch {
     localStorage.removeItem(STORAGE_KEY);
-  }
-  return null;
-}
-
-/** Save current user to localStorage */
-function saveUser(user) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
-}
-
-/** Remove current user from localStorage */
-function logoutUser() {
-  localStorage.removeItem(STORAGE_KEY);
-}
-
-/**
- * Simple mock user database stored in localStorage.
- * Maps email → { name, role } so login can look up
- * a previously registered user's real name.
- */
-function getUsersDB() {
-  try {
-    const db = localStorage.getItem(USERS_DB_KEY);
-    return db ? JSON.parse(db) : {};
-  } catch {
-    return {};
+    return null;
   }
 }
 
-function saveToUsersDB(email, name, role) {
-  const db = getUsersDB();
-  db[email.toLowerCase()] = { name, role };
-  localStorage.setItem(USERS_DB_KEY, JSON.stringify(db));
+function writeFallbackUser(user) {
+  if (user) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
+  } else {
+    localStorage.removeItem(STORAGE_KEY);
+  }
 }
-
-function lookupUserByEmail(email) {
-  const db = getUsersDB();
-  return db[email.toLowerCase()] || null;
-}
-
-/* ── Auth Provider ── */
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [authBackend, setAuthBackend] = useState(hasSupabaseConfig ? 'supabase' : 'fallback');
 
-  // Load user from localStorage on mount
   useEffect(() => {
-    const stored = getCurrentUser();
-    if (stored) setUser(stored);
-    setIsLoading(false);
+    let isMounted = true;
+
+    async function loadSession() {
+      if (!hasSupabaseConfig) {
+        setUser(readFallbackUser());
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const sessionState = await getCurrentSession();
+        if (!isMounted) return;
+        setUser(sessionState.user);
+        if (sessionState.user) writeFallbackUser(sessionState.user);
+      } catch {
+        if (!isMounted) return;
+        setAuthBackend('fallback');
+        setUser(readFallbackUser());
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    }
+
+    loadSession();
+
+    if (!supabase) return () => {
+      isMounted = false;
+    };
+
+    const { data } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (!session?.user) {
+        setUser(null);
+        writeFallbackUser(null);
+        return;
+      }
+
+      try {
+        const sessionState = await getCurrentSession();
+        setUser(sessionState.user);
+        writeFallbackUser(sessionState.user);
+      } catch {
+        setAuthBackend('fallback');
+      }
+    });
+
+    return () => {
+      isMounted = false;
+      data.subscription.unsubscribe();
+    };
   }, []);
 
-  const login = (email, password) => {
-    // Mock authentication — accepts any valid-looking email + non-empty password
-    if (!email || !password) {
-      return { success: false, error: 'Email and password are required.' };
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return { success: false, error: 'Please enter a valid email address.' };
-    }
-    if (password.length < 3) {
-      return { success: false, error: 'Password is too short.' };
+  const login = async (email, password) => {
+    if (!hasSupabaseConfig) {
+      return { success: false, error: 'Supabase is not configured yet.' };
     }
 
-    // Admin Bypass
-    if (email === 'joetech.dev.systems@gmail.com' && password === 'Youssef14@@') {
-      const adminUser = {
-        name: 'Joe Tech',
-        email,
-        role: 'admin'
-      };
-      saveUser(adminUser);
-      setUser(adminUser);
-      return { success: true, role: 'admin' };
+    const result = await signIn(email, password);
+    if (result.success) {
+      setUser(result.user);
+      writeFallbackUser(result.user);
     }
-
-    // Look up if this email was previously registered (via sign up)
-    const existing = lookupUserByEmail(email);
-
-    const mockUser = {
-      name: existing?.name || 'Student',
-      email,
-      role: existing?.role && existing.role !== 'admin' ? existing.role : 'student',
-    };
-
-    saveUser(mockUser);
-    setUser(mockUser);
-    return { success: true, role: mockUser.role };
+    return result;
   };
 
-  const signup = (name, email, password) => {
-    const mockUser = {
-      name,
-      email,
-      role: 'student',
-    };
+  const signup = async (name, email, password) => {
+    if (!hasSupabaseConfig) {
+      return { success: false, error: 'Supabase is not configured yet.' };
+    }
 
-    // Save to mock DB so login can find them later
-    saveToUsersDB(email, name, 'student');
-    saveUser(mockUser);
-    setUser(mockUser);
-    return { success: true };
+    const result = await signUp(name, email, password);
+    if (result.success && result.user) {
+      setUser(result.user);
+      writeFallbackUser(result.user);
+    }
+    return result;
   };
 
-  const logout = () => {
-    logoutUser();
+  const logout = async () => {
+    await signOut();
+    writeFallbackUser(null);
     setUser(null);
   };
 
-  const updateUser = (name, email) => {
-    const updatedUser = {
-      ...user,
-      name,
-      email
-    };
-    saveToUsersDB(email, name, updatedUser.role);
-    saveUser(updatedUser);
-    setUser(updatedUser);
-    return { success: true };
+  const updateUser = async (name, email) => {
+    if (!user?.id || !hasSupabaseConfig) {
+      const updatedUser = { ...user, name, email };
+      setUser(updatedUser);
+      writeFallbackUser(updatedUser);
+      return { success: true };
+    }
+
+    const result = await updateProfile(user.id, { name, email });
+    if (result.success) {
+      setUser(result.user);
+      writeFallbackUser(result.user);
+    }
+    return result;
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, signup, logout, updateUser }}>
+    <AuthContext.Provider value={{ user, isLoading, authBackend, login, signup, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

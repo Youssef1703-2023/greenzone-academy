@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { PenTool, CheckCircle } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
+import { loadLessonNote, saveLessonNote } from '../../services/supabaseStudentService';
 import './LessonNotes.css';
 
 export default function LessonNotes({ lessonId, phaseId, courseSlug }) {
@@ -13,13 +14,31 @@ export default function LessonNotes({ lessonId, phaseId, courseSlug }) {
 
   // Load notes on mount or when lesson changes
   useEffect(() => {
-    const savedNotes = localStorage.getItem(storageKey);
-    if (savedNotes) {
-      setNotes(savedNotes);
-    } else {
-      setNotes('');
+    let isActive = true;
+
+    async function loadNotes() {
+      try {
+        const remoteNotes = await loadLessonNote({ courseSlug, phaseId, lessonId });
+        if (!isActive) return;
+        if (remoteNotes) {
+          setNotes(remoteNotes);
+          localStorage.setItem(storageKey, remoteNotes);
+          return;
+        }
+      } catch {
+        // Emergency offline fallback.
+      }
+
+      if (!isActive) return;
+      setNotes(localStorage.getItem(storageKey) || '');
     }
-  }, [storageKey]);
+
+    loadNotes();
+
+    return () => {
+      isActive = false;
+    };
+  }, [courseSlug, lessonId, phaseId, storageKey]);
 
   // Handle typing and auto-save
   const handleChange = (e) => {
@@ -31,7 +50,12 @@ export default function LessonNotes({ lessonId, phaseId, courseSlug }) {
       clearTimeout(saveTimeoutRef.current);
     }
 
-    saveTimeoutRef.current = setTimeout(() => {
+    saveTimeoutRef.current = setTimeout(async () => {
+      try {
+        await saveLessonNote({ courseSlug, phaseId, lessonId, noteText: newNotes });
+      } catch {
+        // Keep notes safe locally if Supabase is unreachable.
+      }
       localStorage.setItem(storageKey, newNotes);
       setIsSaved(true);
       setTimeout(() => setIsSaved(false), 2000); // Hide "Saved!" after 2s

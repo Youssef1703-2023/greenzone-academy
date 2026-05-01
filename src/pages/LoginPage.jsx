@@ -37,10 +37,7 @@ export default function LoginPage() {
 
     setIsSubmitting(true);
 
-    // Simulate network delay
-    await new Promise((r) => setTimeout(r, 600));
-
-    const result = login(email.trim(), password);
+    const result = await login(email.trim(), password);
 
     if (result.success) {
       if (result.role === 'admin') {

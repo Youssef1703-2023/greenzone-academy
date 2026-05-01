@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps, react-hooks/immutability */
 import { useState, useEffect } from 'react';
 import { useParams, Navigate, Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
@@ -10,6 +11,7 @@ import QuizQuestion from '../../components/Quiz/QuizQuestion';
 import QuizResult from '../../components/Quiz/QuizResult';
 import { getPhaseData, savePhaseData } from '../../data/phaseData';
 import { getCourseData, saveCourseData } from '../../data/coursePageData';
+import { saveQuizAttempt } from '../../services/supabaseStudentService';
 import './PhaseQuizPage.css';
 
 export default function PhaseQuizPage() {
@@ -87,7 +89,7 @@ export default function PhaseQuizPage() {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     // Calculate score
     let correctCount = 0;
     quiz.questions.forEach((q, idx) => {
@@ -136,6 +138,18 @@ export default function PhaseQuizPage() {
         
         saveCourseData(slug, courseData);
       }
+    }
+
+    try {
+      await saveQuizAttempt({
+        courseSlug: slug,
+        phaseId,
+        score: calculatedScore,
+        passed,
+        selectedAnswers,
+      });
+    } catch {
+      // Local quiz result remains as an emergency fallback when Supabase is unavailable.
     }
     
     window.scrollTo({ top: 0, behavior: 'smooth' });

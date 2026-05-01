@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import { useState, useEffect } from 'react';
 import { useParams, Navigate, Link } from 'react-router-dom';
 import { ArrowLeft, Lock } from 'lucide-react';
@@ -12,6 +13,7 @@ import CompletionModal from '../../components/Lesson/CompletionModal';
 import { getPhaseData, savePhaseData } from '../../data/phaseData';
 import { useLanguage } from '../../context/LanguageContext';
 import { useLessonContent } from '../../hooks/useLessonContent';
+import { saveLessonCompletion } from '../../services/supabaseStudentService';
 import './LessonPage.css';
 
 export default function LessonPage() {
@@ -61,7 +63,7 @@ export default function LessonPage() {
   const nextLesson = phase.lessons[lessonIndex + 1];
   const displayLesson = lessonContent?.title ? { ...lesson, title: lessonContent.title } : lesson;
 
-  const handleMarkCompleted = () => {
+  const handleMarkCompleted = async () => {
     const updatedPhase = { ...phase };
     
     // 1. Mark current lesson completed
@@ -87,6 +89,11 @@ export default function LessonPage() {
 
     setPhase(updatedPhase);
     savePhaseData(Number(phaseId), updatedPhase);
+    try {
+      await saveLessonCompletion({ courseSlug: slug, phaseId, lessonId: currentLessonId });
+    } catch {
+      // Local phase progress remains as an emergency fallback when Supabase is unavailable.
+    }
   };
 
   return (
