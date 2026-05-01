@@ -13,6 +13,7 @@ export default function SignUpPage() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [errors, setErrors] = useState({});
   const [generalError, setGeneralError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { signup } = useAuth();
   const navigate = useNavigate();
@@ -41,17 +42,29 @@ export default function SignUpPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setGeneralError('');
+    setSuccessMessage('');
     const newErrors = validate();
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length > 0) return;
 
     setIsSubmitting(true);
-    const result = await signup(name.trim(), email.trim(), password);
-    if (result.success) {
-      navigate('/dashboard');
-    } else {
-      setGeneralError(result.error || 'Something went wrong.');
+    try {
+      const result = await signup(name.trim(), email.trim(), password);
+      if (result.success && result.requiresConfirmation) {
+        setSuccessMessage('Account created. Please check your email to confirm your account, then login.');
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (result.success) {
+        navigate('/dashboard');
+      } else {
+        setGeneralError(result.error || 'Something went wrong.');
+        setIsSubmitting(false);
+      }
+    } catch (error) {
+      setGeneralError(error?.message || 'Something went wrong while creating your account.');
       setIsSubmitting(false);
     }
   };
@@ -75,6 +88,12 @@ export default function SignUpPage() {
         <div className="auth__error">
           <AlertCircle size={16} className="auth__error-icon" />
           {generalError}
+        </div>
+      )}
+
+      {successMessage && (
+        <div className="auth__success">
+          {successMessage}
         </div>
       )}
 

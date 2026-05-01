@@ -82,9 +82,25 @@ export async function signUp(fullName, email, password) {
 
   if (error) return { success: false, error: error.message };
 
+  if (data.user && !data.session) {
+    return {
+      success: true,
+      requiresConfirmation: true,
+      role: 'student',
+      user: normalizeProfile(null, data.user),
+    };
+  }
+
   if (data.user) {
-    const profile = await getProfile(data.user.id, data.user);
-    return { success: true, role: profile.role || 'student', user: normalizeProfile(profile, data.user) };
+    try {
+      const profile = await getProfile(data.user.id, data.user);
+      return { success: true, role: profile.role || 'student', user: normalizeProfile(profile, data.user) };
+    } catch (profileError) {
+      return {
+        success: false,
+        error: profileError?.message || 'Account was created, but profile setup failed.',
+      };
+    }
   }
 
   return { success: true, role: 'student', user: null };
