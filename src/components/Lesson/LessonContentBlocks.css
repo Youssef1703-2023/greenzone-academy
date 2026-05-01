@@ -1,0 +1,775 @@
+/* ═══════════════════════════════════════════════════════════
+   Rich Lesson Content Block Components — Styles
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Shared ── */
+.lesson-study-tools {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+  padding: 18px 20px;
+  margin-bottom: 24px;
+  background: linear-gradient(135deg, rgba(0, 255, 136, 0.055), rgba(11, 18, 28, 0.72));
+  border: 1px solid rgba(0, 255, 136, 0.18);
+  border-radius: 12px;
+}
+
+.lesson-study-tools__copy {
+  min-width: 0;
+}
+
+.lesson-study-tools__eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+}
+
+.lesson-study-tools__copy p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+
+.lesson-study-tools__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.lesson-study-tools__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.035);
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 0.84rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), color var(--transition-fast), background var(--transition-fast);
+}
+
+.lesson-study-tools__btn:hover,
+.lesson-study-tools__btn:focus-visible {
+  border-color: rgba(0, 255, 136, 0.35);
+  background: rgba(0, 255, 136, 0.09);
+  color: var(--accent);
+}
+
+.lcb {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 32px;
+  margin-bottom: 24px;
+  transition: border-color var(--transition-normal);
+}
+
+.lcb:hover {
+  border-color: var(--border-color-hover);
+}
+
+.lcb__icon-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.lcb__icon-wrap {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.lcb__icon-wrap svg {
+  width: 18px;
+  height: 18px;
+}
+
+.lcb__section-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+/* ── 1. Lesson Overview ── */
+.lesson-overview {
+  background: linear-gradient(135deg, rgba(0, 255, 136, 0.04) 0%, var(--bg-card) 100%);
+  border-color: rgba(0, 255, 136, 0.15);
+}
+
+.lesson-overview__text {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  line-height: 1.85;
+}
+
+/* ── 2. Learning Objectives ── */
+.objectives .lcb__icon-wrap {
+  background: rgba(0, 255, 136, 0.1);
+  color: var(--accent);
+}
+
+.objectives__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.objectives__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 0.92rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.objectives__bullet {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: rgba(0, 255, 136, 0.08);
+  border: 1px solid rgba(0, 255, 136, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+}
+
+.objectives__bullet svg {
+  color: var(--accent);
+}
+
+.objectives__text {
+  min-width: 0;
+  flex: 1;
+}
+
+/* ── 3. Key Terms Grid ── */
+.key-terms .lcb__icon-wrap {
+  background: rgba(139, 92, 246, 0.12);
+  color: #a78bfa;
+}
+
+.key-terms__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.key-terms__card {
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
+  transition: all var(--transition-fast);
+}
+
+.key-terms__card:hover {
+  border-color: rgba(139, 92, 246, 0.3);
+  background: rgba(139, 92, 246, 0.04);
+}
+
+.key-terms__term {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #a78bfa;
+  margin-bottom: 6px;
+}
+
+.key-terms__def {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+
+/* ── 4. Deep Explanation ── */
+.explanation .lcb__icon-wrap {
+  background: rgba(59, 130, 246, 0.12);
+  color: #60a5fa;
+}
+
+.explanation__body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.explanation__paragraph {
+  font-size: 0.94rem;
+  color: var(--text-secondary);
+  line-height: 1.85;
+}
+
+.explanation__heading {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-top: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.explanation__bullets {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.explanation__bullets li {
+  position: relative;
+  padding-inline-start: 22px;
+  font-size: 0.92rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.explanation__bullets li::before {
+  content: '';
+  position: absolute;
+  inset-inline-start: 0;
+  top: 8px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px rgba(0, 255, 136, 0.4);
+}
+
+.explanation__note {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 20px;
+  background: rgba(0, 255, 136, 0.04);
+  border-inline-start: 3px solid var(--accent);
+  border-radius: 0 10px 10px 0;
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.explanation__note svg {
+  flex-shrink: 0;
+  color: var(--accent);
+  margin-top: 2px;
+}
+
+.explanation__note-text {
+  min-width: 0;
+}
+
+[dir='rtl'] .explanation__note {
+  border-radius: 10px 0 0 10px;
+}
+
+/* ── 5. Visual Diagram ── */
+.diagram .lcb__icon-wrap {
+  background: rgba(236, 72, 153, 0.12);
+  color: #f472b6;
+}
+
+.diagram__flow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  flex-wrap: wrap;
+  padding: 28px 12px;
+}
+
+.diagram__node {
+  padding: 14px 24px;
+  background: rgba(0, 255, 136, 0.06);
+  border: 1px solid rgba(0, 255, 136, 0.25);
+  border-radius: 12px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-align: center;
+  box-shadow: 0 0 16px rgba(0, 255, 136, 0.08);
+  transition: all var(--transition-fast);
+  min-width: 120px;
+}
+
+.diagram__node:hover {
+  background: rgba(0, 255, 136, 0.1);
+  box-shadow: 0 0 28px rgba(0, 255, 136, 0.18);
+  transform: translateY(-2px);
+}
+
+.diagram__arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8px;
+  color: var(--accent);
+  filter: drop-shadow(0 0 4px rgba(0, 255, 136, 0.4));
+}
+
+.diagram__center-label {
+  text-align: center;
+  margin-top: 18px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  text-shadow: var(--glow-text);
+}
+
+/* ── 6. Tool / Concept Card ── */
+.tool-card {
+  border-color: rgba(245, 158, 11, 0.2);
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.03) 0%, var(--bg-card) 100%);
+}
+
+.tool-card .lcb__icon-wrap {
+  background: rgba(245, 158, 11, 0.12);
+  color: #fbbf24;
+}
+
+.tool-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tool-card__name {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.tool-card__category {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 4px 12px;
+  border-radius: 20px;
+  background: rgba(245, 158, 11, 0.1);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.tool-card__desc {
+  font-size: 0.92rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin-bottom: 16px;
+}
+
+.tool-card__field {
+  margin-bottom: 14px;
+}
+
+.tool-card__field:last-child {
+  margin-bottom: 0;
+}
+
+.tool-card__label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.tool-card__value {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.tool-card__beginner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 18px;
+  background: rgba(245, 158, 11, 0.05);
+  border: 1px dashed rgba(245, 158, 11, 0.2);
+  border-radius: 10px;
+  margin-top: 16px;
+}
+
+.tool-card__beginner svg {
+  flex-shrink: 0;
+  color: #fbbf24;
+  margin-top: 2px;
+}
+
+.tool-card__beginner-text {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* ── 7. Real World Example ── */
+.example-card {
+  border-color: rgba(34, 197, 94, 0.2);
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.03) 0%, var(--bg-card) 100%);
+}
+
+.example-card .lcb__icon-wrap {
+  background: rgba(34, 197, 94, 0.12);
+  color: #4ade80;
+}
+
+.example-card__title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 16px;
+}
+
+.example-card__field {
+  margin-bottom: 14px;
+}
+
+.example-card__field:last-child {
+  margin-bottom: 0;
+}
+
+.example-card__label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #4ade80;
+  margin-bottom: 4px;
+}
+
+.example-card__value {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+/* ── 8. Common Mistakes ── */
+.mistakes-card {
+  border-color: rgba(239, 68, 68, 0.2);
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.03) 0%, var(--bg-card) 100%);
+}
+
+.mistakes-card .lcb__icon-wrap {
+  background: rgba(239, 68, 68, 0.12);
+  color: #f87171;
+}
+
+.mistakes-card__list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.mistakes-card__item {
+  padding: 18px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.1);
+  border-radius: 12px;
+}
+
+.mistakes-card__mistake {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #f87171;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mistakes-card__risk {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 10px;
+  padding-inline-start: 6px;
+}
+
+.mistakes-card__better {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--accent);
+  line-height: 1.6;
+  padding: 10px 14px;
+  background: rgba(0, 255, 136, 0.04);
+  border-radius: 8px;
+}
+
+.mistakes-card__better svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* ── 9. Mini Practice ── */
+.practice-card {
+  border-color: rgba(6, 182, 212, 0.2);
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.03) 0%, var(--bg-card) 100%);
+}
+
+.practice-card .lcb__icon-wrap {
+  background: rgba(6, 182, 212, 0.12);
+  color: #22d3ee;
+}
+
+.practice-card__question {
+  font-size: 0.94rem;
+  color: var(--text-primary);
+  line-height: 1.75;
+  margin-bottom: 16px;
+  font-weight: 600;
+}
+
+.practice-card__hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 18px;
+  background: rgba(6, 182, 212, 0.05);
+  border: 1px dashed rgba(6, 182, 212, 0.2);
+  border-radius: 10px;
+}
+
+.practice-card__hint svg {
+  flex-shrink: 0;
+  color: #22d3ee;
+  margin-top: 2px;
+}
+
+.practice-card__hint-text {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* ── 10. Lesson Quiz Preview ── */
+.lesson-quiz {
+  border-color: rgba(99, 102, 241, 0.22);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.04) 0%, var(--bg-card) 100%);
+}
+
+.lesson-quiz .lcb__icon-wrap {
+  background: rgba(99, 102, 241, 0.12);
+  color: #818cf8;
+}
+
+.lesson-quiz__list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.lesson-quiz__item {
+  padding: 18px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(99, 102, 241, 0.12);
+  border-radius: 12px;
+}
+
+.lesson-quiz__question {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 0 0 14px;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  line-height: 1.65;
+}
+
+.lesson-quiz__number,
+.lesson-quiz__letter {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(129, 140, 248, 0.25);
+  background: rgba(99, 102, 241, 0.1);
+  color: #a5b4fc;
+  font-weight: 800;
+}
+
+.lesson-quiz__number {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+}
+
+.lesson-quiz__options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.lesson-quiz__option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.055);
+  background: rgba(255, 255, 255, 0.025);
+  color: var(--text-secondary);
+  font-size: 0.86rem;
+  line-height: 1.55;
+}
+
+.lesson-quiz__letter {
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  font-size: 0.72rem;
+}
+
+/* ── 10. Lesson Summary ── */
+.summary-card {
+  border-color: rgba(0, 255, 136, 0.2);
+  background: linear-gradient(135deg, rgba(0, 255, 136, 0.05) 0%, var(--bg-card) 100%);
+  box-shadow: 0 0 24px rgba(0, 255, 136, 0.06);
+}
+
+.summary-card .lcb__icon-wrap {
+  background: rgba(0, 255, 136, 0.12);
+  color: var(--accent);
+}
+
+.summary-card__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  counter-reset: summary;
+}
+
+.summary-card__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  font-size: 0.92rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  counter-increment: summary;
+}
+
+.summary-card__num {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: rgba(0, 255, 136, 0.1);
+  border: 1px solid rgba(0, 255, 136, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--accent);
+}
+
+.summary-card__text {
+  min-width: 0;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .lesson-study-tools {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .lesson-study-tools__actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .lesson-study-tools__btn {
+    flex: 1;
+  }
+
+  .lcb {
+    padding: 24px 20px;
+  }
+
+  .diagram__flow {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .diagram__arrow {
+    transform: rotate(90deg);
+    padding: 4px 0;
+  }
+
+  .key-terms__grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .lesson-quiz__options {
+    grid-template-columns: 1fr;
+  }
+
+  .tool-card__header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 480px) {
+  .key-terms__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Credit / Author ── */
+.lesson-credit {
+  text-align: center;
+  padding: 24px 0 12px;
+  margin-top: 12px;
+  border-top: 1px solid rgba(0, 255, 136, 0.06);
+}
+
+.lesson-credit__text {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: rgba(0, 255, 136, 0.35);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}

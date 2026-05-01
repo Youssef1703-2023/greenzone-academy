@@ -1,0 +1,142 @@
+/* ── Learning Summary ── */
+.learning-summary {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  padding: 32px;
+  border-radius: 16px;
+  margin-bottom: 24px;
+}
+
+.learning-summary__header {
+  font-size: 1.15rem;
+  font-weight: 800;
+  margin-bottom: 24px;
+  color: var(--text-primary);
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.learning-summary__course {
+  margin-bottom: 24px;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.learning-summary__course-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.learning-summary__course-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 16px;
+}
+
+.learning-summary__progress-bar {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.learning-summary__progress-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 3px;
+  box-shadow: 0 0 10px rgba(0, 255, 136, 0.4);
+}
+
+.learning-summary__progress-text {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.learning-summary__progress-value {
+  color: var(--accent);
+}
+
+.learning-summary__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.learning-summary__stat {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.learning-summary__stat-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.learning-summary__stat-icon--green {
+  background: rgba(0, 255, 136, 0.1);
+  color: var(--accent);
+}
+
+.learning-summary__stat-icon--blue {
+  background: rgba(96, 165, 250, 0.1);
+  color: #60a5fa;
+}
+
+.learning-summary__stat-icon--purple {
+  background: rgba(168, 85, 247, 0.1);
+  color: #a855f7;
+}
+
+.learning-summary__stat-icon--yellow {
+  background: rgba(250, 204, 21, 0.1);
+  color: #facc15;
+}
+
+.learning-summary__stat-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.learning-summary__stat-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.learning-summary__stat-value {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+@media (max-width: 640px) {
+  .learning-summary {
+    padding: 24px;
+  }
+  
+  .learning-summary__grid {
+    grid-template-columns: 1fr;
+  }
+}

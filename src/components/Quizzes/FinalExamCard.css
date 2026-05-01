@@ -1,0 +1,138 @@
+/* ── Final Exam Card ── */
+.final-exam-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-card);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 32px 40px;
+  border-radius: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.final-exam-card__bg-effect {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.02) 0%, transparent 100%);
+  pointer-events: none;
+}
+
+.final-exam-card__content {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  position: relative;
+  z-index: 1;
+}
+
+.final-exam-card__header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.final-exam-card__icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.final-exam-card__title {
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.final-exam-card__subtitle {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+}
+
+.final-exam-card__requirements {
+  padding-left: 40px;
+  border-left: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+.req-title {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+
+.final-exam-card__requirements ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.final-exam-card__requirements li {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.final-exam-card__requirements li::before {
+  content: '';
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--text-muted);
+}
+
+.final-exam-card__action {
+  position: relative;
+  z-index: 1;
+}
+
+.final-exam-card__btn {
+  padding: 14px 32px;
+  font-size: 1rem;
+  gap: 10px;
+  opacity: 0.6;
+}
+
+@media (max-width: 960px) {
+  .final-exam-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 32px;
+    padding: 32px;
+  }
+  
+  .final-exam-card__content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 24px;
+  }
+
+  .final-exam-card__requirements {
+    padding-left: 0;
+    border-left: none;
+  }
+  
+  .final-exam-card__action {
+    width: 100%;
+  }
+
+  .final-exam-card__btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

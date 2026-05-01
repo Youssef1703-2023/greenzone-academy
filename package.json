@@ -1,0 +1,36 @@
+{
+  "name": "greenzone-academy",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:client\" \"npm run dev --prefix server\"",
+    "dev:client": "vite",
+    "dev:server": "npm run dev --prefix server",
+    "dev:translate": "powershell -ExecutionPolicy Bypass -File scripts/start-libretranslate.ps1",
+    "build": "vite build",
+    "build:server": "npm run build --prefix server",
+    "deploy:server": "npm run deploy:prepare --prefix server",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "lucide-react": "^1.11.0",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "react-router-dom": "^7.14.2",
+    "zod": "^4.1.13"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
+    "eslint": "^10.2.1",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.2",
+    "globals": "^17.5.0",
+    "vite": "^8.0.10",
+    "concurrently": "^9.2.1"
+  }
+}

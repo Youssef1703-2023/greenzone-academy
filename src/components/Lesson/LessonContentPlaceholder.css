@@ -1,0 +1,88 @@
+/* ── Lesson Content Placeholder ── */
+.lesson-content-placeholder {
+  padding: 36px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  margin-bottom: 24px;
+}
+
+.lesson-content-placeholder__title {
+  font-size: 1.3rem;
+  font-weight: 800;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.lesson-content-placeholder__section {
+  margin-bottom: 28px;
+}
+
+.lesson-content-placeholder__section:last-child {
+  margin-bottom: 0;
+}
+
+.lesson-content-placeholder__heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+
+.lesson-content-placeholder__heading svg {
+  color: var(--accent);
+}
+
+.lesson-content-placeholder__text {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+.lesson-content-placeholder__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lesson-content-placeholder__list li {
+  position: relative;
+  padding-left: 20px;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.lesson-content-placeholder__list li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px rgba(0, 255, 136, 0.4);
+}
+
+.lesson-content-placeholder__code {
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+  font-family: monospace;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+@media (max-width: 640px) {
+  .lesson-content-placeholder {
+    padding: 24px 20px;
+  }
+}

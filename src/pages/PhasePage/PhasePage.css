@@ -1,0 +1,50 @@
+/* ── Phase Page ── */
+
+
+
+/* Grid */
+.phase-page__grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+.phase-page__main {
+  min-width: 0;
+}
+
+.phase-page__sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+  position: sticky;
+  top: 96px; /* navbar + padding */
+}
+
+/* Section Title */
+.phase-page__section-title {
+  font-size: 1.1rem;
+  font-weight: 800;
+  margin-bottom: 16px;
+  letter-spacing: -0.01em;
+}
+
+/* Lessons List */
+.phase-page__lesson-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .phase-page__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .phase-page__sidebar {
+    position: static;
+  }
+}

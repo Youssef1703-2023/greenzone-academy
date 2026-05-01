@@ -1,0 +1,175 @@
+/* ── Lesson Card ── */
+.lesson-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 22px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  transition: all var(--transition-fast);
+  animation: fadeInUp 0.4s ease both;
+}
+
+/* Active */
+.lesson-card--active {
+  border-color: rgba(0, 255, 136, 0.15);
+  box-shadow: 0 0 16px rgba(0, 255, 136, 0.04);
+}
+
+.lesson-card--active:hover {
+  border-color: rgba(0, 255, 136, 0.25);
+  transform: translateX(4px);
+}
+
+/* Completed */
+.lesson-card--completed {
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+.lesson-card--completed:hover {
+  border-color: rgba(0, 255, 136, 0.12);
+  transform: translateX(4px);
+}
+
+/* Locked */
+.lesson-card--locked {
+  opacity: 0.45;
+}
+
+/* Number */
+.lesson-card__number {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.88rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.lesson-card--active .lesson-card__number {
+  background: rgba(0, 255, 136, 0.1);
+  border: 1px solid rgba(0, 255, 136, 0.2);
+  color: var(--accent);
+}
+
+.lesson-card--completed .lesson-card__number {
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+}
+
+.lesson-card--locked .lesson-card__number {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: var(--text-muted);
+}
+
+/* Info */
+.lesson-card__info {
+  flex: 1;
+  min-width: 0;
+}
+
+.lesson-card__title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+  line-height: 1.3;
+}
+
+.lesson-card__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.lesson-card__status--completed {
+  color: #60a5fa;
+}
+
+.lesson-card__status--in-progress {
+  color: var(--accent);
+}
+
+.lesson-card__status--locked {
+  color: var(--text-muted);
+}
+
+/* Action */
+.lesson-card__action {
+  flex-shrink: 0;
+}
+
+.lesson-card__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.lesson-card--active .lesson-card__btn {
+  background: rgba(0, 255, 136, 0.1);
+  border: 1px solid rgba(0, 255, 136, 0.2);
+  color: var(--accent);
+}
+
+.lesson-card--active .lesson-card__btn:hover {
+  background: rgba(0, 255, 136, 0.16);
+}
+
+.lesson-card--completed .lesson-card__btn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+}
+
+.lesson-card--completed .lesson-card__btn:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.lesson-card__locked-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  color: var(--text-muted);
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .lesson-card {
+    padding: 14px 16px;
+    gap: 12px;
+  }
+
+  .lesson-card__number {
+    width: 34px;
+    height: 34px;
+    font-size: 0.8rem;
+  }
+
+  .lesson-card__title {
+    font-size: 0.82rem;
+  }
+
+  .lesson-card__btn {
+    padding: 7px 14px;
+    font-size: 0.72rem;
+  }
+}

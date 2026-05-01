@@ -1,0 +1,40 @@
+/* ── Progress Actions ── */
+.progress-actions {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 24px;
+}
+
+.progress-actions__header {
+  font-size: 1.15rem;
+  font-weight: 800;
+  margin-bottom: 20px;
+  color: var(--text-primary);
+}
+
+.progress-actions__buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.progress-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  padding: 16px 20px;
+  font-size: 0.95rem;
+  width: 100%;
+}
+
+.progress-action-btn--glow {
+  box-shadow: 0 0 15px rgba(0, 255, 136, 0.2);
+}
+
+@media (max-width: 640px) {
+  .progress-actions {
+    padding: 20px;
+  }
+}

@@ -1,0 +1,42 @@
+/* ── Quizzes Page ── */
+.quizzes-page__header {
+  margin-bottom: 40px;
+}
+
+.quizzes-page__badge {
+  display: inline-block;
+  padding: 6px 12px;
+  background: rgba(0, 255, 136, 0.1);
+  color: var(--accent);
+  border: 1px solid rgba(0, 255, 136, 0.2);
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 16px;
+}
+
+.quizzes-page__title {
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+  letter-spacing: -0.02em;
+}
+
+.quizzes-page__subtitle {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  max-width: 600px;
+}
+
+@media (max-width: 640px) {
+  .quizzes-page__title {
+    font-size: 2rem;
+  }
+  
+  .quizzes-page__header {
+    margin-bottom: 32px;
+  }
+}

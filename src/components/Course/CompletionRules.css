@@ -1,0 +1,57 @@
+/* ── Completion Rules ── */
+.completion-rules {
+  padding: 24px 28px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  margin-bottom: 32px;
+}
+
+.completion-rules__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  color: var(--accent);
+}
+
+.completion-rules__title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.completion-rules__list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px 24px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.completion-rules__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.completion-rules__check {
+  flex-shrink: 0;
+  color: var(--accent);
+  opacity: 0.6;
+  margin-top: 1px;
+}
+
+@media (max-width: 640px) {
+  .completion-rules__list {
+    grid-template-columns: 1fr;
+  }
+
+  .completion-rules {
+    padding: 20px 20px;
+  }
+}

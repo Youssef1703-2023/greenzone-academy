@@ -1,0 +1,117 @@
+/* ── Lesson Sidebar ── */
+.lesson-sidebar {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.lesson-sidebar__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 20px 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  color: var(--accent);
+}
+
+.lesson-sidebar__title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.lesson-sidebar__list {
+  display: flex;
+  flex-direction: column;
+}
+
+.lesson-sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  transition: background var(--transition-fast);
+  text-decoration: none;
+}
+
+.lesson-sidebar-item:last-child {
+  border-bottom: none;
+}
+
+/* Current */
+.lesson-sidebar-item--current {
+  background: rgba(0, 255, 136, 0.05);
+  border-left: 3px solid var(--accent);
+  padding-left: 21px; /* compensate for border */
+}
+
+/* Completed */
+.lesson-sidebar-item--completed {
+  color: var(--text-primary);
+}
+
+.lesson-sidebar-item--completed:hover:not(.lesson-sidebar-item--current) {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.lesson-sidebar-item--completed .lesson-sidebar-item__status {
+  color: #60a5fa;
+}
+
+.lesson-sidebar-item--completed .lesson-sidebar-item__number {
+  background: rgba(96, 165, 250, 0.1);
+  color: #60a5fa;
+}
+
+/* Active / In Progress */
+.lesson-sidebar-item--active .lesson-sidebar-item__status {
+  color: var(--accent);
+}
+
+.lesson-sidebar-item--active .lesson-sidebar-item__number {
+  background: rgba(0, 255, 136, 0.1);
+  color: var(--accent);
+}
+
+/* Locked */
+.lesson-sidebar-item--locked {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.lesson-sidebar-item--locked .lesson-sidebar-item__number {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-muted);
+}
+
+/* Elements */
+.lesson-sidebar-item__number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.lesson-sidebar-item__info {
+  flex: 1;
+  min-width: 0;
+}
+
+.lesson-sidebar-item__title {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.lesson-sidebar-item__status {
+  flex-shrink: 0;
+  display: flex;
+}

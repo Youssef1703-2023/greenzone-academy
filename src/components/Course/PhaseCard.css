@@ -1,0 +1,226 @@
+/* ── Phase Card ── */
+.phase-card {
+  display: flex;
+  gap: 20px;
+  padding: 24px 26px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  transition: all var(--transition-fast);
+  animation: fadeInUp 0.5s ease both;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Active state */
+.phase-card--active {
+  border-color: rgba(0, 255, 136, 0.15);
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.04);
+}
+
+.phase-card--active:hover {
+  border-color: rgba(0, 255, 136, 0.25);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 24px rgba(0, 255, 136, 0.08);
+}
+
+/* Completed state */
+.phase-card--completed {
+  border-color: rgba(0, 255, 136, 0.1);
+}
+
+.phase-card--completed:hover {
+  border-color: rgba(0, 255, 136, 0.2);
+  transform: translateY(-2px);
+}
+
+/* Locked state */
+.phase-card--locked {
+  opacity: 0.5;
+}
+
+.phase-card--locked:hover {
+  opacity: 0.6;
+}
+
+/* Phase Number */
+.phase-card__number {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  font-weight: 800;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.phase-card--active .phase-card__number {
+  background: rgba(0, 255, 136, 0.1);
+  border: 1px solid rgba(0, 255, 136, 0.2);
+  color: var(--accent);
+}
+
+.phase-card--completed .phase-card__number {
+  background: rgba(0, 255, 136, 0.08);
+  border: 1px solid rgba(0, 255, 136, 0.15);
+  color: var(--accent);
+}
+
+.phase-card--locked .phase-card__number {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: var(--text-muted);
+}
+
+/* Body */
+.phase-card__body {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Header */
+.phase-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.phase-card__title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.phase-card__phase-label {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.phase-card--active .phase-card__phase-label {
+  color: var(--accent);
+}
+
+/* Status Badge */
+.phase-card__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
+}
+
+.phase-card__status--in-progress {
+  background: rgba(0, 255, 136, 0.08);
+  color: var(--accent);
+  border: 1px solid rgba(0, 255, 136, 0.12);
+}
+
+.phase-card__status--completed {
+  background: rgba(59, 130, 246, 0.08);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.12);
+}
+
+.phase-card__status--locked {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-muted);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* Meta */
+.phase-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.phase-card__meta-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.phase-card__meta-item svg {
+  opacity: 0.6;
+}
+
+.phase-card__meta-item--progress {
+  color: var(--accent);
+}
+
+/* Progress */
+.phase-card__progress {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.phase-card__progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), #00cc6a);
+  border-radius: 4px;
+  box-shadow: 0 0 8px rgba(0, 255, 136, 0.25);
+  transition: width 0.8s ease;
+  min-width: 6px;
+}
+
+/* Action */
+.phase-card__action {
+  display: flex;
+  align-items: center;
+}
+
+.phase-card__btn {
+  padding: 9px 22px;
+  font-size: 0.78rem;
+}
+
+.phase-card__locked-text {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .phase-card {
+    flex-direction: column;
+    gap: 14px;
+    padding: 20px 18px;
+  }
+
+  .phase-card__number {
+    width: 38px;
+    height: 38px;
+    font-size: 0.9rem;
+  }
+
+  .phase-card__header {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .phase-card__btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

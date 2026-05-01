@@ -1,0 +1,123 @@
+/* ── Dashboard Header ── */
+.dash-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 40px 44px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 28px;
+}
+
+.dash-header__text {
+  position: relative;
+  z-index: 1;
+  max-width: 560px;
+}
+
+.dash-header__greeting {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: rgba(0, 255, 136, 0.06);
+  border: 1px solid rgba(0, 255, 136, 0.12);
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--accent);
+  margin-bottom: 18px;
+  letter-spacing: 0.03em;
+}
+
+.dash-header__sparkle {
+  animation: glowPulse 3s ease infinite;
+}
+
+.dash-header__title {
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 800;
+  margin-bottom: 10px;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+}
+
+.dash-header__subtitle {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin-bottom: 24px;
+}
+
+.dash-header__btn {
+  padding: 13px 28px;
+  font-size: 0.88rem;
+}
+
+/* Visual */
+.dash-header__visual {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  flex-shrink: 0;
+}
+
+.dash-header__glow {
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(0, 255, 136, 0.08), transparent 65%);
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: glowPulse 5s ease infinite;
+}
+
+.dash-header__ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 255, 136, 0.1);
+}
+
+.dash-header__ring--1 {
+  width: 160px;
+  height: 160px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: float 6s ease-in-out infinite;
+}
+
+.dash-header__ring--2 {
+  width: 100px;
+  height: 100px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-color: rgba(0, 255, 136, 0.15);
+  animation: floatSlow 8s ease-in-out infinite;
+}
+
+@media (max-width: 768px) {
+  .dash-header {
+    flex-direction: column;
+    padding: 28px 24px;
+    text-align: center;
+  }
+
+  .dash-header__text {
+    max-width: 100%;
+  }
+
+  .dash-header__greeting {
+    margin-inline: auto;
+  }
+
+  .dash-header__visual {
+    display: none;
+  }
+}

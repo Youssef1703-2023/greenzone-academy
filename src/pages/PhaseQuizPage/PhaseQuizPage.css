@@ -1,0 +1,51 @@
+/* ── Phase Quiz Page ── */
+.phase-quiz-page__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 22px;
+  transition: all var(--transition-fast);
+  text-decoration: none;
+}
+
+.phase-quiz-page__back:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-primary);
+  transform: translateX(-2px);
+}
+
+.phase-quiz-page__grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+.phase-quiz-page__main {
+  min-width: 0;
+}
+
+.phase-quiz-page__sidebar {
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 96px; /* navbar + padding */
+}
+
+@media (max-width: 960px) {
+  .phase-quiz-page__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .phase-quiz-page__sidebar {
+    position: static;
+    margin-top: 24px;
+  }
+}

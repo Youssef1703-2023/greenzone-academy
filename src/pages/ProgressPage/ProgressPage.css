@@ -1,0 +1,68 @@
+/* ── Progress Page ── */
+.progress-page__header {
+  margin-bottom: 40px;
+}
+
+.progress-page__badge {
+  display: inline-block;
+  padding: 6px 12px;
+  background: rgba(0, 255, 136, 0.1);
+  color: var(--accent);
+  border: 1px solid rgba(0, 255, 136, 0.2);
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 16px;
+}
+
+.progress-page__title {
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+  letter-spacing: -0.02em;
+}
+
+.progress-page__subtitle {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  max-width: 600px;
+}
+
+.progress-page__grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+.progress-page__main {
+  min-width: 0;
+}
+
+.progress-page__sidebar {
+  display: flex;
+  flex-direction: column;
+}
+
+.progress-page__gap {
+  height: 24px;
+}
+
+@media (max-width: 960px) {
+  .progress-page__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .progress-page__title {
+    font-size: 2rem;
+  }
+  
+  .progress-page__header {
+    margin-bottom: 32px;
+  }
+}

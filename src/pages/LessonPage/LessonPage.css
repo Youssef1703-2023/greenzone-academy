@@ -1,0 +1,103 @@
+/* ── Lesson Page ── */
+
+.lesson-page__grid {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 28px;
+  align-items: flex-start;
+}
+
+.lesson-page__main {
+  min-width: 0;
+  max-width: 820px;
+}
+
+/* Ensure good spacing between large content blocks */
+.lesson-content-renderer {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.lesson-page__sidebar {
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 88px;
+}
+
+.lesson-page__notice {
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  background: rgba(0, 255, 136, 0.05);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.lesson-page__notice--warning {
+  border-color: rgba(255, 193, 7, 0.35);
+  background: rgba(255, 193, 7, 0.08);
+}
+
+/* Locked State */
+.lesson-page__locked-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 40px;
+  background: var(--bg-card);
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  text-align: center;
+}
+
+.lesson-page__locked-icon {
+  color: var(--text-muted);
+  margin-bottom: 24px;
+  opacity: 0.5;
+}
+
+.lesson-page__locked-title {
+  font-size: 1.8rem;
+  font-weight: 800;
+  margin-bottom: 12px;
+  color: var(--text-primary);
+}
+
+.lesson-page__locked-message {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  margin-bottom: 32px;
+  max-width: 400px;
+  line-height: 1.6;
+}
+
+.lesson-page__locked-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+  .lesson-page__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .lesson-page__sidebar {
+    position: static;
+    order: -1;
+    margin-bottom: 8px;
+  }
+}
+
+@media (max-width: 640px) {
+  .lesson-page__grid {
+    gap: 16px;
+  }
+}

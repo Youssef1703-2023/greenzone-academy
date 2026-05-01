@@ -1,0 +1,112 @@
+/* ── Phase Quiz Card ── */
+.quiz-card {
+  padding: 28px 26px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  transition: border-color var(--transition-fast);
+}
+
+.quiz-card--unlocked {
+  border-color: rgba(0, 255, 136, 0.12);
+}
+
+.quiz-card--unlocked:hover {
+  border-color: rgba(0, 255, 136, 0.2);
+}
+
+.quiz-card--locked {
+  opacity: 0.7;
+}
+
+.quiz-card__header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.quiz-card__icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: rgba(0, 255, 136, 0.08);
+  border: 1px solid rgba(0, 255, 136, 0.15);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.quiz-card__icon--locked {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
+}
+
+.quiz-card__title {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.quiz-card__passed {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-top: 2px;
+}
+
+.quiz-card__desc {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+.quiz-card__req {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 10px;
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+}
+
+.quiz-card--unlocked .quiz-card__req {
+  background: rgba(0, 255, 136, 0.03);
+  border-color: rgba(0, 255, 136, 0.08);
+  color: var(--accent);
+}
+
+.quiz-card__req svg {
+  flex-shrink: 0;
+}
+
+.quiz-card__btn {
+  width: 100%;
+  padding: 12px;
+  font-size: 0.82rem;
+  justify-content: center;
+}
+
+.quiz-card__btn--disabled {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: var(--text-muted);
+  cursor: not-allowed;
+  border-radius: 10px;
+  font-family: var(--font-primary);
+  font-weight: 600;
+  font-size: 0.78rem;
+}

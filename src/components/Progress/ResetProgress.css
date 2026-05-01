@@ -1,0 +1,142 @@
+/* ── Reset Progress Button ── */
+.reset-progress__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: rgba(239, 68, 68, 0.06);
+  border: 1px solid rgba(239, 68, 68, 0.15);
+  border-radius: 8px;
+  color: #f87171;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-family: inherit;
+}
+
+.reset-progress__btn:hover {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+/* ── Reset Modal ── */
+.reset-modal__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: fadeIn 0.2s ease;
+}
+
+.reset-modal {
+  background: var(--bg-secondary);
+  border: 1px solid rgba(239, 68, 68, 0.15);
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 420px;
+  width: 100%;
+  position: relative;
+}
+
+.reset-modal__close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  transition: color var(--transition-fast);
+}
+
+.reset-modal__close:hover {
+  color: var(--text-primary);
+}
+
+.reset-modal__body {
+  text-align: center;
+}
+
+.reset-modal__icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  background: rgba(239, 68, 68, 0.1);
+  color: #f87171;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+}
+
+.reset-modal__title {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+
+.reset-modal__msg {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 8px;
+}
+
+.reset-modal__note {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  margin-bottom: 24px;
+}
+
+.reset-modal__actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.reset-modal__cancel {
+  padding: 10px 20px;
+  font-size: 0.85rem;
+}
+
+.reset-modal__confirm {
+  padding: 10px 20px;
+  font-size: 0.85rem;
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.reset-modal__confirm:hover {
+  background: rgba(239, 68, 68, 0.25);
+}
+
+/* Done state */
+.reset-modal__body--done {
+  padding: 20px 0;
+}
+
+.reset-modal__done-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(0, 255, 136, 0.1);
+  color: var(--accent);
+  font-size: 1.5rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+}

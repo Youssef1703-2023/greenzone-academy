@@ -1,0 +1,207 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ContentStatus {
+  draft
+  published
+  archived
+}
+
+enum TranslationStatus {
+  pending
+  completed
+  failed
+  stale
+}
+
+enum UserRole {
+  admin
+  student
+}
+
+enum UserStatus {
+  active
+  disabled
+}
+
+model Course {
+  id          String        @id @default(cuid())
+  slug        String        @unique
+  title       String
+  description String
+  difficulty  String
+  status      ContentStatus @default(draft)
+  phases      Phase[]
+  lessons     Lesson[]
+  quizzes     Quiz[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model Phase {
+  id          String        @id @default(cuid())
+  courseId    String
+  order       Int
+  title       String
+  description String
+  status      ContentStatus @default(draft)
+  course      Course        @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessons     Lesson[]
+  quizzes     Quiz[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@unique([courseId, order])
+}
+
+model Lesson {
+  id              String              @id @default(cuid())
+  courseId        String
+  phaseId         String
+  order           Int
+  slug            String
+  title           String
+  languageSource  String              @default("en")
+  contentJson     Json
+  contentHash     String
+  status          ContentStatus       @default(draft)
+  course          Course              @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  phase           Phase               @relation(fields: [phaseId], references: [id], onDelete: Cascade)
+  translations    LessonTranslation[]
+  translationJobs TranslationJob[]
+  progress        StudentProgress[]
+  quizScores      QuizScore[]
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  @@unique([phaseId, order])
+  @@unique([courseId, slug])
+}
+
+model LessonTranslation {
+  id                    String            @id @default(cuid())
+  lessonId              String
+  targetLang            String
+  translatedContentJson Json
+  sourceContentHash     String
+  provider              String
+  providerModel         String?
+  status                TranslationStatus @default(completed)
+  reviewedAt            DateTime?
+  reviewedBy            String?
+  lesson                Lesson            @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+
+  @@unique([lessonId, targetLang])
+}
+
+model TranslationJob {
+  id           String            @id @default(cuid())
+  lessonId     String
+  targetLang   String
+  status       TranslationStatus @default(pending)
+  errorMessage String?
+  lesson       Lesson            @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+}
+
+model User {
+  id                    String            @id @default(cuid())
+  name                  String
+  email                 String            @unique
+  role                  UserRole          @default(student)
+  status                UserStatus        @default(active)
+  progressPercent       Int               @default(0)
+  completedLessonsCount Int               @default(0)
+  completedPhasesCount  Int               @default(0)
+  joinedAt              DateTime          @default(now())
+  lastActiveAt          DateTime?
+  progress              StudentProgress[]
+  quizScores            QuizScore[]
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+}
+
+model StudentProgress {
+  id          String    @id @default(cuid())
+  studentId   String
+  lessonId    String
+  status      String    @default("not_started")
+  completedAt DateTime?
+  student     User      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  lesson      Lesson    @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([studentId, lessonId])
+}
+
+model Quiz {
+  id           String         @id @default(cuid())
+  courseId     String
+  phaseId      String
+  slug         String         @unique
+  title        String
+  passingScore Int            @default(70)
+  status       ContentStatus  @default(draft)
+  course       Course         @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  phase        Phase          @relation(fields: [phaseId], references: [id], onDelete: Cascade)
+  questions    QuizQuestion[]
+  scores       QuizScore[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+}
+
+model QuizQuestion {
+  id            String   @id @default(cuid())
+  quizId        String
+  order         Int
+  prompt        String
+  optionsJson   Json
+  correctAnswer String
+  quiz          Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([quizId, order])
+}
+
+model QuizScore {
+  id        String   @id @default(cuid())
+  studentId String
+  quizId    String?
+  lessonId  String?
+  quizSlug  String
+  score     Int
+  attempts  Int      @default(1)
+  student   User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  quiz      Quiz?    @relation(fields: [quizId], references: [id], onDelete: SetNull)
+  lesson    Lesson?  @relation(fields: [lessonId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AdminSetting {
+  key       String   @id
+  valueJson Json
+  updatedAt DateTime @updatedAt
+}
+
+model AdminAuditLog {
+  id         String   @id @default(cuid())
+  action     String
+  entityType String
+  entityId   String?
+  entityName String
+  actor      String   @default("Admin")
+  details    String?
+  createdAt  DateTime @default(now())
+}

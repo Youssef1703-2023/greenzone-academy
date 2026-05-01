@@ -1,0 +1,141 @@
+/* ── Settings Modal ── */
+.settings-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeIn 0.2s ease;
+}
+
+.settings-modal {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  animation: slideUpFade 0.3s ease;
+}
+
+.settings-modal__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.settings-modal__header h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.settings-modal__close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.settings-modal__close:hover {
+  color: var(--text-primary);
+}
+
+.settings-modal__body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.settings-modal__option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  background: var(--bg-tertiary);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+}
+
+.settings-modal__option-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.settings-modal__option-info svg {
+  color: var(--accent);
+}
+
+.settings-modal__option-info h4 {
+  font-size: 0.95rem;
+  margin-bottom: 4px;
+}
+
+.settings-modal__option-info p {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.settings-modal__language-actions {
+  display: inline-flex;
+  flex-direction: row;
+  gap: 6px;
+  padding: 4px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+}
+
+.rtl-mode .settings-modal__language-actions {
+  flex-direction: row-reverse;
+}
+
+.settings-modal__language-btn {
+  min-width: 74px;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 700;
+  transition: all var(--transition-fast);
+}
+
+.settings-modal__language-btn--active {
+  background: rgba(0, 255, 136, 0.14);
+  color: var(--accent);
+}
+
+@keyframes slideUpFade {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.settings-modal__note {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  padding: 10px 14px;
+  background: rgba(0, 255, 136, 0.04);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  line-height: 1.5;
+}
