@@ -11,16 +11,42 @@ function normalizeProfile(profile, authUser) {
   };
 }
 
+function getErrorMessage(error, fallback) {
+  return error?.message || error?.error_description || fallback;
+}
+
+async function withTimeout(promise, message, timeoutMs = 15000) {
+  let timeoutId;
+  const timeout = new Promise((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error(message)), timeoutMs);
+  });
+
+  try {
+    return await Promise.race([promise, timeout]);
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
 export async function getCurrentSession() {
   if (!supabase) return { session: null, user: null, profile: null };
 
-  const { data, error } = await supabase.auth.getSession();
+  const { data, error } = await withTimeout(
+    supabase.auth.getSession(),
+    'Session check timed out. Please refresh and try again.'
+  );
   if (error) throw error;
 
   const authUser = data.session?.user || null;
   if (!authUser) return { session: data.session, user: null, profile: null };
 
-  const profile = await getProfile(authUser.id, authUser);
+  let profile = null;
+  try {
+    profile = await getProfile(authUser.id, authUser);
+  } catch {
+    profile = null;
+  }
+
   return { session: data.session, user: normalizeProfile(profile, authUser), profile };
 }
 
@@ -57,28 +83,53 @@ export async function getProfile(userId, authUser = null) {
 
 export async function signIn(email, password) {
   const client = requireSupabase();
-  const { data, error } = await client.auth.signInWithPassword({ email, password });
-  if (error) return { success: false, error: error.message };
+  try {
+    const { data, error } = await withTimeout(
+      client.auth.signInWithPassword({ email, password }),
+      'Login request timed out. Please try again.'
+    );
 
-  const profile = await getProfile(data.user.id, data.user);
-  const user = normalizeProfile(profile, data.user);
-  if (user.status === 'disabled') {
-    await client.auth.signOut();
-    return { success: false, error: 'This account is disabled.' };
+    if (error) return { success: false, error: error.message };
+    if (!data.user) return { success: false, error: 'Login failed. Please try again.' };
+
+    let profile = null;
+    try {
+      profile = await withTimeout(
+        getProfile(data.user.id, data.user),
+        'Profile loading timed out. Please try again.'
+      );
+    } catch (profileError) {
+      await client.auth.signOut();
+      return {
+        success: false,
+        error: getErrorMessage(profileError, 'Login succeeded, but profile loading failed.'),
+      };
+    }
+
+    const user = normalizeProfile(profile, data.user);
+    if (user.status === 'disabled') {
+      await client.auth.signOut();
+      return { success: false, error: 'This account is disabled.' };
+    }
+
+    return { success: true, role: user.role, user };
+  } catch (error) {
+    return { success: false, error: getErrorMessage(error, 'Login failed. Please try again.') };
   }
-
-  return { success: true, role: user.role, user };
 }
 
 export async function signUp(fullName, email, password) {
   const client = requireSupabase();
-  const { data, error } = await client.auth.signUp({
-    email,
-    password,
-    options: {
-      data: { full_name: fullName },
-    },
-  });
+  const { data, error } = await withTimeout(
+    client.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { full_name: fullName },
+      },
+    }),
+    'Signup request timed out. Please try again.'
+  );
 
   if (error) return { success: false, error: error.message };
 
@@ -98,7 +149,7 @@ export async function signUp(fullName, email, password) {
     } catch (profileError) {
       return {
         success: false,
-        error: profileError?.message || 'Account was created, but profile setup failed.',
+        error: getErrorMessage(profileError, 'Account was created, but profile setup failed.'),
       };
     }
   }

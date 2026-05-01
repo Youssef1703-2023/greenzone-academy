@@ -37,16 +37,21 @@ export default function LoginPage() {
 
     setIsSubmitting(true);
 
-    const result = await login(email.trim(), password);
+    try {
+      const result = await login(email.trim(), password);
 
-    if (result.success) {
-      if (result.role === 'admin') {
-        navigate('/admin');
+      if (result.success) {
+        if (result.role === 'admin') {
+          navigate('/admin');
+        } else {
+          navigate('/dashboard');
+        }
       } else {
-        navigate('/dashboard');
+        setGeneralError(result.error || 'Login failed. Please try again.');
+        setIsSubmitting(false);
       }
-    } else {
-      setGeneralError(result.error);
+    } catch (error) {
+      setGeneralError(error?.message || 'Login failed. Please try again.');
       setIsSubmitting(false);
     }
   };
