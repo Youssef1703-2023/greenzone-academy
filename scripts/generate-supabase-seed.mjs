@@ -49,6 +49,13 @@ const translationRows = [];
 for (const lessonNumber of [1, 2]) {
   const english = stripRuntimeFlags(getLessonContent(1, lessonNumber, 'en'));
   const arabic = stripRuntimeFlags(getLessonContent(1, lessonNumber, 'ar'));
+  const fallbackTitle = lessonNumber === 1
+    ? 'Lesson 1: What Is Cybersecurity?'
+    : 'Lesson 2: Why Cybersecurity Matters';
+  english.title ||= fallbackTitle;
+  arabic.title ||= lessonNumber === 1
+    ? 'الدرس 1: ما هو الأمن السيبراني؟'
+    : 'الدرس 2: لماذا الأمن السيبراني مهم؟';
   const contentHash = hashContent(english);
   const lessonId = uuidFor(`lesson:${courseData.slug}:1:${lessonNumber}`);
   const phaseId = uuidFor(`phase:${courseData.slug}:1`);
