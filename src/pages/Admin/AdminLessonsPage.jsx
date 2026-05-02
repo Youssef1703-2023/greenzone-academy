@@ -5,7 +5,19 @@ import AdminLayout from '../../components/AdminLayout/AdminLayout';
 import { useLanguage } from '../../context/LanguageContext';
 import { deleteLesson, getCourses, getLessons, getPhases, saveLesson } from '../../services/adminDataService';
 import { AdminBadge, AdminErrorState, AdminModal, AdminPageHeader, AdminToolbar, ConfirmModal, formatAdminValue, useAdminData } from './AdminShared';
+import AdminLessonBuilder from './AdminLessonBuilder';
 import './AdminPages.css';
+
+function createLessonContent(title = '') {
+  return {
+    title,
+    credit: 'Prepared by: JoeTech',
+    overview: '',
+    objectives: [],
+    keyTerms: [],
+    sections: [],
+  };
+}
 
 export default function AdminLessonsPage() {
   const { language, t } = useLanguage();
@@ -18,6 +30,7 @@ export default function AdminLessonsPage() {
   const [phaseFilter, setPhaseFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || 'All');
   const [editing, setEditing] = useState(null);
+  const [editorContent, setEditorContent] = useState(createLessonContent());
   const [deleting, setDeleting] = useState(null);
 
   const filtered = useMemo(() => lessons.filter((lesson) => {
@@ -36,15 +49,22 @@ export default function AdminLessonsPage() {
     const form = new FormData(event.currentTarget);
     const course = courses.find((item) => item.id === form.get('courseId')) || courses[0];
     const phase = phases.find((item) => item.id === form.get('phaseRecordId')) || phases[0];
+    const lessonTitle = form.get('title');
+    const contentJson = {
+      ...editorContent,
+      title: editorContent.title || lessonTitle,
+    };
+
     await saveLesson({
       ...editing,
       courseId: course.id,
       courseTitle: course.title,
       phaseRecordId: phase?.id,
-      phaseId: Number(form.get('phaseId')),
-      phaseTitle: phase?.title || `Phase ${form.get('phaseId')}`,
+      phaseId: Number(phase?.order || form.get('phaseId') || 1),
+      phaseTitle: phase?.title || `Phase ${phase?.order || form.get('phaseId')}`,
       order: Number(form.get('order')),
-      title: form.get('title'),
+      title: lessonTitle,
+      contentJson,
       status: form.get('status'),
       englishStatus: form.get('englishStatus'),
       arabicStatus: form.get('arabicStatus'),
@@ -56,13 +76,24 @@ export default function AdminLessonsPage() {
     await refresh();
   }
 
+  function openLessonEditor(lesson = null) {
+    const draft = lesson || {
+      status: 'Draft',
+      englishStatus: 'Missing',
+      arabicStatus: 'Missing',
+      hashStatus: 'N/A',
+    };
+    setEditing(draft);
+    setEditorContent(draft.contentJson || createLessonContent(draft.title));
+  }
+
   return (
     <AdminLayout>
       <main className="admin-page">
         <AdminPageHeader
           title={t('admin.manageLessons')}
           subtitle={t('admin.manageLessonsSubtitle')}
-          actions={<button className="btn btn-primary" onClick={() => setEditing({ status: 'Draft', englishStatus: 'Missing', arabicStatus: 'Missing', hashStatus: 'N/A' })}><Plus size={18} />{t('admin.addLesson')}</button>}
+          actions={<button className="btn btn-primary" onClick={() => openLessonEditor()}><Plus size={18} />{t('admin.addLesson')}</button>}
         />
         {loading && <div className="admin-loading">{t('admin.loading')}</div>}
         {(error || coursesError || phasesError) && <AdminErrorState message={error || coursesError || phasesError} />}
@@ -114,7 +145,7 @@ export default function AdminLessonsPage() {
                   <td>
                     <div className="admin-table__actions">
                       <Link className="admin-table__btn" to={lesson.route}><Eye size={14} />{t('admin.preview')}</Link>
-                      <button className="admin-table__btn" onClick={() => setEditing(lesson)}><Pencil size={14} />{t('admin.edit')}</button>
+                      <button className="admin-table__btn" onClick={() => openLessonEditor(lesson)}><Pencil size={14} />{t('admin.edit')}</button>
                       <Link className="admin-table__btn" to="/admin/translations"><Languages size={14} />{t('admin.translation')}</Link>
                       <button className="admin-table__btn admin-table__btn--danger" onClick={() => setDeleting(lesson)}><Trash2 size={14} />{t('admin.delete')}</button>
                     </div>
@@ -144,6 +175,9 @@ export default function AdminLessonsPage() {
               <label>{t('admin.translationSource')}<select name="translationSource" className="form-control" defaultValue={editing.translationSource || 'Missing'}><option>Manual</option><option>Google</option><option>Missing</option></select></label>
               <label>{t('admin.hashStatus')}<select name="hashStatus" className="form-control" defaultValue={editing.hashStatus || 'N/A'}><option>Fresh</option><option>Stale</option><option>N/A</option></select></label>
               <label>{t('admin.readingTime')}<input name="readingTime" className="form-control" defaultValue={editing.readingTime || 'N/A'} /></label>
+              <div className="admin-form-grid__wide">
+                <AdminLessonBuilder value={editorContent} onChange={setEditorContent} fallbackTitle={editing.title} />
+              </div>
             </form>
           </AdminModal>
         )}

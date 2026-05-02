@@ -177,6 +177,8 @@ export async function getLessons() {
       order: lesson.lesson_number,
       slug: lesson.slug,
       title: lesson.title,
+      contentJson: lesson.content_json,
+      contentHash: lesson.content_hash,
       status: fromStatus(lesson.status),
       route: `/courses/${lesson.courses?.slug}/phase/${lesson.phases?.phase_number}/lesson/${lesson.lesson_number}`,
       englishStatus: lesson.content_json ? 'Ready' : 'Missing',
@@ -201,6 +203,7 @@ export async function saveLesson(record) {
     title: record.title,
     content_json: contentJson,
     content_hash: record.contentHash || String(JSON.stringify(contentJson).length),
+    reading_time: record.readingTime || null,
     status: toContentStatus(record.status),
   };
 
