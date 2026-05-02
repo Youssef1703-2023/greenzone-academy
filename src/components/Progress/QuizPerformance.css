@@ -4,6 +4,8 @@
   border: 1px solid var(--border-color);
   border-radius: 16px;
   padding: 24px;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .quiz-performance__header {
@@ -15,6 +17,8 @@
 
 .quiz-performance__table-wrapper {
   overflow-x: auto;
+  max-width: 100%;
+  -webkit-overflow-scrolling: touch;
 }
 
 .quiz-performance__table {
@@ -51,6 +55,8 @@
   font-size: 0.95rem;
   font-weight: 600;
   color: var(--text-primary);
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .quiz-name-cell svg {
@@ -102,6 +108,20 @@
 
 @media (max-width: 640px) {
   .quiz-performance {
-    padding: 20px;
+    padding: 18px 14px;
+    border-radius: 14px;
+  }
+
+  .quiz-performance__header {
+    font-size: 1rem;
+  }
+
+  .quiz-performance__table {
+    min-width: 420px;
+  }
+
+  .quiz-performance__table th,
+  .quiz-performance__table td {
+    padding: 12px 10px;
   }
 }

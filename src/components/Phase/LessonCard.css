@@ -9,6 +9,8 @@
   border-radius: 14px;
   transition: all var(--transition-fast);
   animation: fadeInUp 0.4s ease both;
+  max-width: 100%;
+  min-width: 0;
 }
 
 /* Active */
@@ -154,7 +156,8 @@
 /* ── Responsive ── */
 @media (max-width: 640px) {
   .lesson-card {
-    padding: 14px 16px;
+    align-items: flex-start;
+    padding: 14px;
     gap: 12px;
   }
 
@@ -166,10 +169,36 @@
 
   .lesson-card__title {
     font-size: 0.82rem;
+    overflow-wrap: anywhere;
+  }
+
+  .lesson-card__action {
+    align-self: center;
   }
 
   .lesson-card__btn {
     padding: 7px 14px;
     font-size: 0.72rem;
+  }
+}
+
+@media (max-width: 390px) {
+  .lesson-card {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr);
+  }
+
+  .lesson-card__action {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  .lesson-card__btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .lesson-card__locked-btn {
+    width: 100%;
   }
 }

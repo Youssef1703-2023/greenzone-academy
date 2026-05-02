@@ -1,6 +1,13 @@
 /* ── Course Page ── */
 
 /* Phases Section */
+.course-page,
+.phases-section {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
 .phases-section {
   margin-bottom: 40px;
 }
@@ -26,4 +33,16 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
+  min-width: 0;
+}
+
+@media (max-width: 640px) {
+  .phases-section {
+    margin-bottom: 24px;
+  }
+
+  .phases-section__title {
+    font-size: 1.12rem;
+    line-height: 1.35;
+  }
 }

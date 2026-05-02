@@ -11,6 +11,7 @@
   border-radius: 22px;
   overflow: hidden;
   margin-bottom: 24px;
+  max-width: 100%;
 }
 
 .course-header__glow {
@@ -29,6 +30,7 @@
   z-index: 1;
   flex: 1;
   max-width: 660px;
+  min-width: 0;
 }
 
 .course-header__top {
@@ -242,6 +244,26 @@
 
 @media (max-width: 480px) {
   .course-header {
-    padding: 24px 20px;
+    padding: 22px 18px;
+    border-radius: 14px;
+    text-align: left;
+    align-items: stretch;
+  }
+
+  .course-header__top,
+  .course-header__badges,
+  .course-header__stats {
+    justify-content: flex-start;
+  }
+
+  .course-header__title {
+    font-size: 1.45rem;
+    line-height: 1.22;
+    overflow-wrap: anywhere;
+  }
+
+  .course-header__desc {
+    font-size: 0.86rem;
+    line-height: 1.65;
   }
 }

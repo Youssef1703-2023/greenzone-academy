@@ -4,6 +4,8 @@
   border: 1px solid var(--border-color);
   border-radius: 16px;
   overflow: hidden;
+  width: 100%;
+  max-width: 100%;
 }
 
 .lesson-sidebar__header {
@@ -34,6 +36,7 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.03);
   transition: background var(--transition-fast);
   text-decoration: none;
+  min-width: 0;
 }
 
 .lesson-sidebar-item:last-child {
@@ -109,9 +112,34 @@
   font-size: 0.82rem;
   font-weight: 600;
   line-height: 1.4;
+  overflow-wrap: anywhere;
 }
 
 .lesson-sidebar-item__status {
   flex-shrink: 0;
   display: flex;
+}
+
+@media (max-width: 640px) {
+  .lesson-sidebar__header {
+    padding: 16px;
+  }
+
+  .lesson-sidebar-item {
+    gap: 10px;
+    padding: 13px 14px;
+  }
+
+  .lesson-sidebar-item--current {
+    padding-left: 11px;
+  }
+
+  .lesson-sidebar-item__number {
+    width: 26px;
+    height: 26px;
+  }
+
+  .lesson-sidebar-item__title {
+    font-size: 0.78rem;
+  }
 }

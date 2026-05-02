@@ -137,6 +137,22 @@
 
 @media (max-width: 640px) {
   .lesson-header {
-    padding: 24px 20px;
+    padding: 22px 18px;
+    border-radius: 14px;
+  }
+
+  .lesson-header__top,
+  .lesson-header__stats {
+    flex-wrap: wrap;
+  }
+
+  .lesson-header__title {
+    font-size: clamp(1.45rem, 9vw, 1.9rem);
+    line-height: 1.22;
+    overflow-wrap: anywhere;
+  }
+
+  .lesson-header__subtitle {
+    line-height: 1.65;
   }
 }

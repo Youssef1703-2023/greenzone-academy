@@ -1,4 +1,10 @@
 /* ── Progress Page ── */
+.progress-page {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
 .progress-page__header {
   margin-bottom: 40px;
 }
@@ -58,11 +64,36 @@
 }
 
 @media (max-width: 640px) {
+  .progress-page__badge {
+    margin-bottom: 14px;
+  }
+
   .progress-page__title {
-    font-size: 2rem;
+    font-size: clamp(2rem, 12vw, 2.45rem);
+    line-height: 1.08;
+    overflow-wrap: anywhere;
+  }
+
+  .progress-page__subtitle {
+    font-size: 1rem;
+    line-height: 1.65;
   }
   
   .progress-page__header {
-    margin-bottom: 32px;
+    margin-bottom: 24px;
+  }
+
+  .progress-page__grid {
+    gap: 18px;
+  }
+}
+
+@media (max-width: 390px) {
+  .progress-page__title {
+    font-size: 2rem;
+  }
+
+  .progress-page__subtitle {
+    font-size: 0.94rem;
   }
 }
