@@ -31,6 +31,7 @@ export default function AdminLessonsPage() {
   const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || 'All');
   const [editing, setEditing] = useState(null);
   const [editorContent, setEditorContent] = useState(createLessonContent());
+  const [hasPreviewed, setHasPreviewed] = useState(false);
   const [deleting, setDeleting] = useState(null);
 
   const filtered = useMemo(() => lessons.filter((lesson) => {
@@ -46,6 +47,7 @@ export default function AdminLessonsPage() {
 
   async function handleSubmit(event) {
     event.preventDefault();
+    const submitAction = event.nativeEvent?.submitter?.value;
     const form = new FormData(event.currentTarget);
     const course = courses.find((item) => item.id === form.get('courseId')) || courses[0];
     const phase = phases.find((item) => item.id === form.get('phaseRecordId')) || phases[0];
@@ -65,7 +67,7 @@ export default function AdminLessonsPage() {
       order: Number(form.get('order')),
       title: lessonTitle,
       contentJson,
-      status: form.get('status'),
+      status: submitAction === 'publish' ? 'Published' : submitAction === 'draft' ? 'Draft' : form.get('status'),
       englishStatus: form.get('englishStatus'),
       arabicStatus: form.get('arabicStatus'),
       translationSource: form.get('translationSource'),
@@ -84,6 +86,7 @@ export default function AdminLessonsPage() {
       hashStatus: 'N/A',
     };
     setEditing(draft);
+    setHasPreviewed(false);
     setEditorContent(draft.contentJson || createLessonContent(draft.title));
   }
 
@@ -160,7 +163,18 @@ export default function AdminLessonsPage() {
           <AdminModal wide title={editing.id ? t('admin.editLesson') : t('admin.addLesson')} onClose={() => setEditing(null)} footer={(
             <>
               <button type="button" className="btn btn-secondary" onClick={() => setEditing(null)}>{t('common.cancel')}</button>
-              <button form="lesson-form" type="submit" className="btn btn-primary">{t('admin.save')}</button>
+              <button form="lesson-form" type="submit" name="saveAction" value="draft" className="btn btn-secondary">{t('admin.draft')}</button>
+              <button
+                form="lesson-form"
+                type="submit"
+                name="saveAction"
+                value="publish"
+                className="btn btn-primary"
+                disabled={!hasPreviewed}
+                title={!hasPreviewed ? 'Open Preview before publishing' : ''}
+              >
+                {t('admin.published')}
+              </button>
             </>
           )}>
             <form id="lesson-form" className="admin-form-grid" onSubmit={handleSubmit}>
@@ -176,7 +190,7 @@ export default function AdminLessonsPage() {
               <label>{t('admin.hashStatus')}<select name="hashStatus" className="form-control" defaultValue={editing.hashStatus || 'N/A'}><option>Fresh</option><option>Stale</option><option>N/A</option></select></label>
               <label>{t('admin.readingTime')}<input name="readingTime" className="form-control" defaultValue={editing.readingTime || 'N/A'} /></label>
               <div className="admin-form-grid__wide">
-                <AdminLessonBuilder value={editorContent} onChange={setEditorContent} fallbackTitle={editing.title} />
+                <AdminLessonBuilder value={editorContent} onChange={setEditorContent} fallbackTitle={editing.title} onPreview={() => setHasPreviewed(true)} />
               </div>
             </form>
           </AdminModal>
