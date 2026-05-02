@@ -1,4 +1,5 @@
-import { Target } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { ArrowRight, Target } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import './OverallProgressCard.css';
 
@@ -41,6 +42,20 @@ export default function OverallProgressCard({ data }) {
           style={{ width: `${data.overallProgress}%` }}
         ></div>
       </div>
+
+      {data.nextStep && (
+        <div className="overall-progress-card__next">
+          <div>
+            <span>{data.nextStep.label}</span>
+            <h3>{data.nextStep.title}</h3>
+            <p>{data.nextStep.description}</p>
+          </div>
+          <Link to={data.nextStep.route} className="btn btn-primary overall-progress-card__next-btn">
+            {data.nextStep.cta}
+            <ArrowRight size={16} />
+          </Link>
+        </div>
+      )}
     </div>
   );
 }

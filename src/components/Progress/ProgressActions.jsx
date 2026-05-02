@@ -3,7 +3,7 @@ import { ArrowLeft, ArrowRight, BookOpen, FileText } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import './ProgressActions.css';
 
-export default function ProgressActions() {
+export default function ProgressActions({ nextStep }) {
   const { language, t } = useLanguage();
   const ArrowIcon = language === 'ar' ? ArrowLeft : ArrowRight;
 
@@ -11,9 +11,9 @@ export default function ProgressActions() {
     <div className="progress-actions">
       <h3 className="progress-actions__header">{t('dashboard.quickActions')}</h3>
       <div className="progress-actions__buttons">
-        <Link to="/courses/cybersecurity-fundamentals" className="btn btn-primary progress-action-btn progress-action-btn--glow">
+        <Link to={nextStep?.route || '/courses/cybersecurity-fundamentals'} className="btn btn-primary progress-action-btn progress-action-btn--glow">
           <ArrowIcon size={18} />
-          {t('dashboard.continueLearning')}
+          {nextStep?.cta || t('dashboard.continueLearning')}
         </Link>
         <Link to="/courses" className="btn btn-secondary progress-action-btn">
           <BookOpen size={18} />

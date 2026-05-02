@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { CheckCircle2, PlayCircle, Lock } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import './PhaseProgressTimeline.css';
@@ -54,6 +55,15 @@ export default function PhaseProgressTimeline({ phases }) {
                       style={{ width: `${phase.progress}%` }}
                     ></div>
                   </div>
+                )}
+
+                {!isLocked && (
+                  <Link
+                    className="phase-timeline-item__link"
+                    to={`/courses/cybersecurity-fundamentals/phase/${phase.id}${isQuizReady ? '/quiz' : ''}`}
+                  >
+                    {isQuizReady ? t('quizzesPage.startQuiz') : t('dashboard.continueLearning')}
+                  </Link>
                 )}
               </div>
             </div>

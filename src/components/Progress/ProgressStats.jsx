@@ -24,8 +24,8 @@ export default function ProgressStats({ data }) {
       color: 'green'
     },
     {
-      label: t('progressPage.currentStreak'),
-      value: `${data.streak} ${t('common.days')}`,
+      label: 'Lessons remaining',
+      value: data.lessonsRemaining,
       icon: Zap,
       color: 'yellow'
     }
