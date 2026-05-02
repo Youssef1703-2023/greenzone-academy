@@ -1,0 +1,48 @@
+.admin-route-loading {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background:
+    linear-gradient(rgba(0, 255, 136, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 136, 0.025) 1px, transparent 1px),
+    var(--bg-primary);
+  background-size: 56px 56px;
+}
+
+.admin-route-loading__card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: min(360px, 100%);
+  padding: 18px;
+  border: 1px solid rgba(0, 255, 136, 0.18);
+  border-radius: 16px;
+  background: rgba(17, 24, 39, 0.72);
+  box-shadow: 0 22px 70px rgba(0, 0, 0, 0.35);
+}
+
+.admin-route-loading__mark {
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  border: 3px solid rgba(0, 255, 136, 0.16);
+  border-top-color: var(--accent);
+  animation: spin 0.8s linear infinite;
+}
+
+.admin-route-loading__card strong,
+.admin-route-loading__card span {
+  display: block;
+}
+
+.admin-route-loading__card strong {
+  color: var(--text-primary);
+  font-weight: 900;
+}
+
+.admin-route-loading__card span {
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+}

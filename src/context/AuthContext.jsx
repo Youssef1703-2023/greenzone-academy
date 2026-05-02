@@ -32,8 +32,8 @@ function writeFallbackUser(user) {
 }
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState(() => readFallbackUser());
+  const [isLoading, setIsLoading] = useState(() => hasSupabaseConfig && !readFallbackUser());
   const [authBackend, setAuthBackend] = useState(hasSupabaseConfig ? 'supabase' : 'fallback');
 
   useEffect(() => {
@@ -50,7 +50,7 @@ export function AuthProvider({ children }) {
         const sessionState = await getCurrentSession();
         if (!isMounted) return;
         setUser(sessionState.user);
-        if (sessionState.user) writeFallbackUser(sessionState.user);
+        writeFallbackUser(sessionState.user);
       } catch {
         if (!isMounted) return;
         setAuthBackend('fallback');

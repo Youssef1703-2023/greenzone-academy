@@ -65,6 +65,16 @@ async function safeQuery(query) {
   }
 }
 
+async function safeCount(query) {
+  try {
+    const { count, error } = await query;
+    if (error) throw error;
+    return count || 0;
+  } catch (error) {
+    throw new Error(error?.message || ADMIN_BACKEND_UNAVAILABLE, { cause: error });
+  }
+}
+
 export async function getCourses() {
   const client = requireSupabase();
   const courses = await safeQuery(client.from('courses').select('*, phases(id), lessons(id), quizzes(id)').order('created_at'));
@@ -431,36 +441,72 @@ export async function saveAdminSettings(settings) {
 }
 
 export async function fetchBackendAdminOverview() {
-  const [courses, phases, lessons, quizzes, students, scores, translations, auditLog] = await Promise.all([
-    getCourses(),
-    getPhases(),
-    getLessons(),
-    getQuizzes(),
-    getStudents(),
-    getScores(),
-    getTranslations(),
-    getAuditLog(),
+  const client = requireSupabase();
+  const countRows = (table, configure = (query) => query) => safeCount(
+    configure(client.from(table).select('id', { count: 'exact', head: true })),
+  );
+
+  const [
+    totalCourses,
+    totalPhases,
+    totalLessons,
+    totalQuizzes,
+    publishedCourses,
+    draftCourses,
+    publishedLessons,
+    draftLessons,
+    totalStudents,
+    activeStudents,
+    disabledStudents,
+    englishLessons,
+    completedArabicTranslations,
+    staleArabicTranslations,
+    attempts,
+    progressRows,
+    auditLog,
+  ] = await Promise.all([
+    countRows('courses'),
+    countRows('phases'),
+    countRows('lessons'),
+    countRows('quizzes'),
+    countRows('courses', (query) => query.eq('status', 'published')),
+    countRows('courses', (query) => query.eq('status', 'draft')),
+    countRows('lessons', (query) => query.eq('status', 'published')),
+    countRows('lessons', (query) => query.eq('status', 'draft')),
+    countRows('profiles', (query) => query.eq('role', 'student')),
+    countRows('profiles', (query) => query.eq('role', 'student').eq('status', 'active')),
+    countRows('profiles', (query) => query.eq('role', 'student').eq('status', 'disabled')),
+    countRows('lessons', (query) => query.not('content_json', 'is', null)),
+    countRows('translations', (query) => query.eq('target_lang', 'ar').eq('status', 'completed')),
+    countRows('translations', (query) => query.eq('target_lang', 'ar').eq('status', 'stale')),
+    safeQuery(client.from('quiz_attempts').select('score,passed')),
+    safeQuery(client.from('student_progress').select('user_id,status').eq('status', 'completed')),
+    safeQuery(client.from('admin_audit_log').select('*').order('created_at', { ascending: false }).limit(8)),
   ]);
 
-  const scoreValues = scores.map((score) => Number(score.score)).filter(Number.isFinite);
-  const passedAttempts = scores.filter((score) => score.status === 'Passed').length;
-  const completedLessons = students.map((student) => Number(student.completedLessons)).filter(Number.isFinite);
+  const scoreValues = attempts.map((attempt) => Number(attempt.score)).filter(Number.isFinite);
+  const passedAttempts = attempts.filter((attempt) => attempt.passed).length;
+  const completedByStudent = progressRows.reduce((map, item) => {
+    map.set(item.user_id, (map.get(item.user_id) || 0) + 1);
+    return map;
+  }, new Map());
+  const completedLessons = [...completedByStudent.values()];
 
   return {
     content: {
-      totalCourses: courses.length,
-      totalPhases: phases.length,
-      totalLessons: lessons.length,
-      totalQuizzes: quizzes.length,
-      publishedCourses: courses.filter((course) => course.status === 'Published').length,
-      draftCourses: courses.filter((course) => course.status === 'Draft').length,
-      publishedLessons: lessons.filter((lesson) => lesson.status === 'Published').length,
-      draftLessons: lessons.filter((lesson) => lesson.status === 'Draft').length,
+      totalCourses,
+      totalPhases,
+      totalLessons,
+      totalQuizzes,
+      publishedCourses,
+      draftCourses,
+      publishedLessons,
+      draftLessons,
     },
     students: {
-      totalStudents: students.length,
-      activeStudents: students.filter((student) => student.status === 'Active').length,
-      disabledStudents: students.filter((student) => student.status === 'Disabled').length,
+      totalStudents,
+      activeStudents,
+      disabledStudents,
       newStudentsThisWeek: unavailable,
     },
     progress: {
@@ -471,27 +517,27 @@ export async function fetchBackendAdminOverview() {
       studentsNotStarted: unavailable,
     },
     quizzes: {
-      totalAttempts: scores.length,
+      totalAttempts: attempts.length,
       passedAttempts,
-      failedAttempts: scores.length - passedAttempts,
+      failedAttempts: attempts.length - passedAttempts,
       averageScore: average(scoreValues),
       highestScore: scoreValues.length ? Math.max(...scoreValues) : unavailable,
       lowestScore: scoreValues.length ? Math.min(...scoreValues) : unavailable,
-      passRate: scores.length ? Math.round((passedAttempts / scores.length) * 100) : unavailable,
+      passRate: attempts.length ? Math.round((passedAttempts / attempts.length) * 100) : unavailable,
     },
     contentHealth: {
-      lessonsWithEnglishContent: lessons.filter((lesson) => lesson.englishStatus === 'Ready').length,
-      lessonsMissingEnglishContent: lessons.filter((lesson) => lesson.englishStatus === 'Missing').length,
-      lessonsWithArabicTranslation: translations.filter((translation) => translation.arabicStatus === 'Ready').length,
-      lessonsMissingArabicTranslation: translations.filter((translation) => translation.arabicStatus === 'Missing').length,
-      lessonsWithStaleTranslation: translations.filter((translation) => translation.hashStatus === 'Stale').length,
-      draftLessons: lessons.filter((lesson) => lesson.status === 'Draft').length,
+      lessonsWithEnglishContent: englishLessons,
+      lessonsMissingEnglishContent: Math.max(totalLessons - englishLessons, 0),
+      lessonsWithArabicTranslation: completedArabicTranslations,
+      lessonsMissingArabicTranslation: Math.max(totalLessons - completedArabicTranslations, 0),
+      lessonsWithStaleTranslation: staleArabicTranslations,
+      draftLessons,
     },
     recentActivity: auditLog.slice(0, 8).map((event) => ({
       id: event.id,
-      label: `${event.action}: ${event.entityName}`,
-      type: event.entityType,
-      createdAt: event.createdAt,
+      label: `${event.action}: ${event.entity_name}`,
+      type: event.entity_type,
+      createdAt: event.created_at,
     })),
     health: {
       authStatus: 'Supabase Auth',

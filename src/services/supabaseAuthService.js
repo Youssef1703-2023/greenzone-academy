@@ -15,7 +15,7 @@ function getErrorMessage(error, fallback) {
   return error?.message || error?.error_description || fallback;
 }
 
-async function withTimeout(promise, message, timeoutMs = 15000) {
+async function withTimeout(promise, message, timeoutMs = 8000) {
   let timeoutId;
   const timeout = new Promise((_, reject) => {
     timeoutId = setTimeout(() => reject(new Error(message)), timeoutMs);
@@ -54,7 +54,7 @@ export async function getProfile(userId, authUser = null) {
   const client = requireSupabase();
   const { data, error } = await client
     .from('profiles')
-    .select('*')
+    .select('id,full_name,email,role,status')
     .eq('id', userId)
     .maybeSingle();
 
