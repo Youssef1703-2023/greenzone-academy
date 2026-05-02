@@ -97,6 +97,18 @@ export function AuthProvider({ children }) {
     if (result.success) {
       setUser(result.user);
       writeFallbackUser(result.user);
+
+      if (result.profilePending) {
+        getCurrentSession()
+          .then((sessionState) => {
+            if (!sessionState.user) return;
+            setUser(sessionState.user);
+            writeFallbackUser(sessionState.user);
+          })
+          .catch(() => {
+            setAuthBackend('fallback');
+          });
+      }
     }
     return result;
   };

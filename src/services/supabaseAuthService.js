@@ -1,13 +1,32 @@
 import { requireSupabase, supabase } from './supabaseClient';
 
-function normalizeProfile(profile, authUser) {
+const FALLBACK_STORAGE_KEY = 'greenzone_user_fallback';
+
+function readCachedUser(authUser) {
+  try {
+    const stored = localStorage.getItem(FALLBACK_STORAGE_KEY);
+    if (!stored) return null;
+
+    const cachedUser = JSON.parse(stored);
+    const cachedEmail = cachedUser?.email?.toLowerCase();
+    const authEmail = authUser?.email?.toLowerCase();
+
+    if (cachedUser?.id && cachedUser.id === authUser?.id) return cachedUser;
+    if (cachedEmail && authEmail && cachedEmail === authEmail) return cachedUser;
+  } catch {
+    localStorage.removeItem(FALLBACK_STORAGE_KEY);
+  }
+  return null;
+}
+
+function normalizeProfile(profile, authUser, cachedUser = null) {
   if (!profile && !authUser) return null;
   return {
     id: profile?.id || authUser?.id,
-    name: profile?.full_name || authUser?.user_metadata?.full_name || authUser?.email?.split('@')[0] || 'Student',
+    name: profile?.full_name || cachedUser?.name || authUser?.user_metadata?.full_name || authUser?.email?.split('@')[0] || 'Student',
     email: profile?.email || authUser?.email,
-    role: profile?.role || 'student',
-    status: profile?.status || 'active',
+    role: profile?.role || cachedUser?.role || authUser?.user_metadata?.role || 'student',
+    status: profile?.status || cachedUser?.status || 'active',
   };
 }
 
@@ -47,7 +66,7 @@ export async function getCurrentSession() {
     profile = null;
   }
 
-  return { session: data.session, user: normalizeProfile(profile, authUser), profile };
+  return { session: data.session, user: normalizeProfile(profile, authUser, readCachedUser(authUser)), profile };
 }
 
 export async function getProfile(userId, authUser = null) {
@@ -86,33 +105,33 @@ export async function signIn(email, password) {
   try {
     const { data, error } = await withTimeout(
       client.auth.signInWithPassword({ email, password }),
-      'Login request timed out. Please try again.'
+      'Login request timed out. Please try again.',
+      6500
     );
 
     if (error) return { success: false, error: error.message };
     if (!data.user) return { success: false, error: 'Login failed. Please try again.' };
 
+    const cachedUser = readCachedUser(data.user);
     let profile = null;
+    let profilePending = false;
     try {
       profile = await withTimeout(
         getProfile(data.user.id, data.user),
-        'Profile loading timed out. Please try again.'
+        'Profile loading timed out.',
+        3000
       );
-    } catch (profileError) {
-      await client.auth.signOut();
-      return {
-        success: false,
-        error: getErrorMessage(profileError, 'Login succeeded, but profile loading failed.'),
-      };
+    } catch {
+      profilePending = true;
     }
 
-    const user = normalizeProfile(profile, data.user);
+    const user = normalizeProfile(profile, data.user, cachedUser);
     if (user.status === 'disabled') {
       await client.auth.signOut();
       return { success: false, error: 'This account is disabled.' };
     }
 
-    return { success: true, role: user.role, user };
+    return { success: true, role: user.role, user, profilePending };
   } catch (error) {
     return { success: false, error: getErrorMessage(error, 'Login failed. Please try again.') };
   }

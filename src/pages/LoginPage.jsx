@@ -41,10 +41,11 @@ export default function LoginPage() {
       const result = await login(email.trim(), password);
 
       if (result.success) {
+        setIsSubmitting(false);
         if (result.role === 'admin') {
-          navigate('/admin');
+          navigate('/admin', { replace: true });
         } else {
-          navigate('/dashboard');
+          navigate('/dashboard', { replace: true });
         }
       } else {
         setGeneralError(result.error || 'Login failed. Please try again.');
