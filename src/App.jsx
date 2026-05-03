@@ -1,38 +1,39 @@
-import { useEffect } from 'react';
+import { Suspense, lazy, useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
-import LandingPage from './pages/LandingPage';
-import LoginPage from './pages/LoginPage';
-import SignUpPage from './pages/SignUpPage';
-import DashboardPage from './pages/DashboardPage/DashboardPage';
-import CoursePage from './pages/CoursePage/CoursePage';
-import CoursesPage from './pages/CoursesPage/CoursesPage';
-import PhasePage from './pages/PhasePage/PhasePage';
-import PhaseQuizPage from './pages/PhaseQuizPage/PhaseQuizPage';
-import LessonPage from './pages/LessonPage/LessonPage';
-import ProgressPage from './pages/ProgressPage/ProgressPage';
-import QuizzesPage from './pages/QuizzesPage/QuizzesPage';
-import ProfilePage from './pages/ProfilePage/ProfilePage';
-import GlossaryPage from './pages/GlossaryPage/GlossaryPage';
-import NotFoundPage from './pages/NotFoundPage/NotFoundPage';
 import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary';
 import ScrollToTop from './components/UI/ScrollToTop/ScrollToTop';
 
-// Admin imports
 import AdminRoute from './components/AdminRoute';
-import AdminOverviewPage from './pages/Admin/AdminOverviewPage';
-import AdminCoursesPage from './pages/Admin/AdminCoursesPage';
-import AdminPhasesPage from './pages/Admin/AdminPhasesPage';
-import AdminLessonsPage from './pages/Admin/AdminLessonsPage';
-import AdminTranslationsPage from './pages/Admin/AdminTranslationsPage';
-import AdminQuizzesPage from './pages/Admin/AdminQuizzesPage';
-import AdminStudentsPage from './pages/Admin/AdminStudentsPage';
-import AdminScoresPage from './pages/Admin/AdminScoresPage';
-import AdminAuditLogPage from './pages/Admin/AdminAuditLogPage';
-import AdminSettingsPage from './pages/Admin/AdminSettingsPage';
 
 import './App.css';
+
+const LandingPage = lazy(() => import('./pages/LandingPage'));
+const LoginPage = lazy(() => import('./pages/LoginPage'));
+const SignUpPage = lazy(() => import('./pages/SignUpPage'));
+const DashboardPage = lazy(() => import('./pages/DashboardPage/DashboardPage'));
+const CoursePage = lazy(() => import('./pages/CoursePage/CoursePage'));
+const CoursesPage = lazy(() => import('./pages/CoursesPage/CoursesPage'));
+const PhasePage = lazy(() => import('./pages/PhasePage/PhasePage'));
+const PhaseQuizPage = lazy(() => import('./pages/PhaseQuizPage/PhaseQuizPage'));
+const LessonPage = lazy(() => import('./pages/LessonPage/LessonPage'));
+const ProgressPage = lazy(() => import('./pages/ProgressPage/ProgressPage'));
+const QuizzesPage = lazy(() => import('./pages/QuizzesPage/QuizzesPage'));
+const ProfilePage = lazy(() => import('./pages/ProfilePage/ProfilePage'));
+const GlossaryPage = lazy(() => import('./pages/GlossaryPage/GlossaryPage'));
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage/NotFoundPage'));
+
+const AdminOverviewPage = lazy(() => import('./pages/Admin/AdminOverviewPage'));
+const AdminCoursesPage = lazy(() => import('./pages/Admin/AdminCoursesPage'));
+const AdminPhasesPage = lazy(() => import('./pages/Admin/AdminPhasesPage'));
+const AdminLessonsPage = lazy(() => import('./pages/Admin/AdminLessonsPage'));
+const AdminTranslationsPage = lazy(() => import('./pages/Admin/AdminTranslationsPage'));
+const AdminQuizzesPage = lazy(() => import('./pages/Admin/AdminQuizzesPage'));
+const AdminStudentsPage = lazy(() => import('./pages/Admin/AdminStudentsPage'));
+const AdminScoresPage = lazy(() => import('./pages/Admin/AdminScoresPage'));
+const AdminAuditLogPage = lazy(() => import('./pages/Admin/AdminAuditLogPage'));
+const AdminSettingsPage = lazy(() => import('./pages/Admin/AdminSettingsPage'));
 
 function ScrollAnimationObserver() {
   useEffect(() => {
@@ -56,6 +57,18 @@ function ScrollAnimationObserver() {
   return null;
 }
 
+function RouteLoader() {
+  return (
+    <div className="route-loader" role="status" aria-live="polite">
+      <div className="route-loader__mark"></div>
+      <div>
+        <p className="route-loader__eyebrow">Green Zone Academy</p>
+        <p className="route-loader__text">Loading workspace...</p>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   return (
     <ErrorBoundary>
@@ -64,7 +77,8 @@ export default function App() {
           <div className="app">
             <ScrollAnimationObserver />
             <ScrollToTop />
-            <Routes>
+            <Suspense fallback={<RouteLoader />}>
+              <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignUpPage />} />
@@ -231,7 +245,8 @@ export default function App() {
             />
             {/* Catch-all 404 Route */}
             <Route path="*" element={<NotFoundPage />} />
-          </Routes>
+              </Routes>
+            </Suspense>
         </div>
       </BrowserRouter>
     </AuthProvider>

@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 import { useState, useEffect } from 'react';
 import { useParams, Navigate, Link } from 'react-router-dom';
-import { ArrowLeft, Lock } from 'lucide-react';
+import { ArrowLeft, BookOpen, CheckCircle2, ListChecks, Lock, X } from 'lucide-react';
 import StudentLayout from '../../components/StudentLayout/StudentLayout';
 import Breadcrumbs from '../../components/UI/Breadcrumbs/Breadcrumbs';
 import LessonHeader from '../../components/Lesson/LessonHeader';
@@ -20,6 +20,8 @@ export default function LessonPage() {
   const { slug, phaseId, lessonId } = useParams();
   const [phase, setPhase] = useState(null);
   const [showCompletionModal, setShowCompletionModal] = useState(false);
+  const [isLessonDrawerOpen, setIsLessonDrawerOpen] = useState(false);
+  const [readingProgress, setReadingProgress] = useState(0);
   const { language, t } = useLanguage();
   const currentLessonId = Number(lessonId);
   const {
@@ -44,6 +46,32 @@ export default function LessonPage() {
     setPhase(getPhaseData(Number(phaseId)));
   }, [phaseId, slug]);
 
+  useEffect(() => {
+    setIsLessonDrawerOpen(false);
+  }, [lessonId, phaseId]);
+
+  useEffect(() => {
+    function updateReadingProgress() {
+      const documentHeight = document.documentElement.scrollHeight - window.innerHeight;
+      if (documentHeight <= 0) {
+        setReadingProgress(0);
+        return;
+      }
+
+      const nextProgress = Math.min(100, Math.max(0, Math.round((window.scrollY / documentHeight) * 100)));
+      setReadingProgress(nextProgress);
+    }
+
+    updateReadingProgress();
+    window.addEventListener('scroll', updateReadingProgress, { passive: true });
+    window.addEventListener('resize', updateReadingProgress);
+
+    return () => {
+      window.removeEventListener('scroll', updateReadingProgress);
+      window.removeEventListener('resize', updateReadingProgress);
+    };
+  }, [lessonId, phaseId]);
+
   if (!phase) {
     return null; 
   }
@@ -60,8 +88,11 @@ export default function LessonPage() {
   }
 
   const isLocked = lesson.status === 'locked';
+  const previousLesson = phase.lessons[lessonIndex - 1];
   const nextLesson = phase.lessons[lessonIndex + 1];
   const displayLesson = lessonContent?.title ? { ...lesson, title: lessonContent.title } : lesson;
+  const completedCount = phase.completedLessons || phase.lessons.filter((item) => item.status === 'completed').length;
+  const phaseProgress = phase.totalLessons ? Math.round((completedCount / phase.totalLessons) * 100) : phase.progress;
 
   const handleMarkCompleted = async () => {
     const updatedPhase = { ...phase };
@@ -98,7 +129,30 @@ export default function LessonPage() {
 
   return (
     <StudentLayout>
-      <div className="lesson-page">
+      <div className={`lesson-page ${isLessonDrawerOpen ? 'lesson-page--drawer-open' : ''}`}>
+        <div className="lesson-player-topline" style={{ transform: `scaleX(${readingProgress / 100})` }}></div>
+        <div className="lesson-player-bar">
+          <Link to={`/courses/${slug}/phase/${phaseId}`} className="lesson-player-bar__back">
+            <ArrowLeft size={16} />
+            {t('lesson.backToPhase')}
+          </Link>
+          <div className="lesson-player-bar__meta">
+            <span>{t('common.lesson')} {lesson.id} / {phase.totalLessons}</span>
+            <div className="lesson-player-bar__track" aria-hidden="true">
+              <div style={{ width: `${phaseProgress}%` }}></div>
+            </div>
+            <strong>{phaseProgress}%</strong>
+          </div>
+          <button
+            type="button"
+            className="lesson-player-bar__lessons"
+            onClick={() => setIsLessonDrawerOpen(true)}
+          >
+            <ListChecks size={17} />
+            Lessons
+          </button>
+        </div>
+
         <Breadcrumbs 
           items={[
             { label: 'Courses', to: '/courses' },
@@ -148,13 +202,56 @@ export default function LessonPage() {
 
           {/* Sidebar */}
           <div className="lesson-page__sidebar">
-            <LessonSidebar
-              phase={phase}
-              currentLessonId={currentLessonId}
-              lessonTitleOverrides={lessonContent?.title ? { [currentLessonId]: lessonContent.title } : {}}
-            />
+            <div className="lesson-player-sidebar">
+              <div className="lesson-player-sidebar__mobile-head">
+                <div>
+                  <span>Course Player</span>
+                  <strong>{phase.title}</strong>
+                </div>
+                <button type="button" onClick={() => setIsLessonDrawerOpen(false)} aria-label="Close lessons">
+                  <X size={20} />
+                </button>
+              </div>
+              <LessonSidebar
+                phase={phase}
+                currentLessonId={currentLessonId}
+                lessonTitleOverrides={lessonContent?.title ? { [currentLessonId]: lessonContent.title } : {}}
+              />
+              <div className="lesson-player-card">
+                <div className="lesson-player-card__icon">
+                  <BookOpen size={18} />
+                </div>
+                <div>
+                  <p className="lesson-player-card__label">Phase Progress</p>
+                  <strong>{completedCount} / {phase.totalLessons}</strong>
+                </div>
+                <div className="lesson-player-card__track">
+                  <div style={{ width: `${phaseProgress}%` }}></div>
+                </div>
+                <div className="lesson-player-card__links">
+                  {previousLesson && previousLesson.status !== 'locked' ? (
+                    <Link to={`/courses/${slug}/phase/${phaseId}/lesson/${previousLesson.id}`}>Previous</Link>
+                  ) : <span>Previous</span>}
+                  {nextLesson && lesson.status !== 'locked' ? (
+                    <Link to={`/courses/${slug}/phase/${phaseId}/lesson/${nextLesson.id}`}>Next</Link>
+                  ) : <span>Next</span>}
+                </div>
+                {lesson.status === 'completed' && (
+                  <p className="lesson-player-card__done">
+                    <CheckCircle2 size={14} />
+                    Lesson completed
+                  </p>
+                )}
+              </div>
+            </div>
           </div>
         </div>
+        <button
+          type="button"
+          className="lesson-page__drawer-backdrop"
+          onClick={() => setIsLessonDrawerOpen(false)}
+          aria-label="Close lesson navigation"
+        />
       </div>
       <CompletionModal isOpen={showCompletionModal} courseSlug={slug} phaseId={phaseId} />
     </StudentLayout>
