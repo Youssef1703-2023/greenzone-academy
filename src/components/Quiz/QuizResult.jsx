@@ -2,7 +2,16 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, RotateCcw, Award, AlertCircle, Check, X } from 'lucide-react';
 import './QuizResult.css';
 
-export default function QuizResult({ score, passingScore, isPassed, courseSlug, phaseId, onRetry }) {
+export default function QuizResult({
+  score,
+  passingScore,
+  isPassed,
+  courseSlug,
+  phaseId,
+  onRetry,
+  questions = [],
+  selectedAnswers = {},
+}) {
   return (
     <div className={`quiz-result ${isPassed ? 'quiz-result--passed' : 'quiz-result--failed'}`}>
       <div className="quiz-result__icon">
@@ -31,7 +40,7 @@ export default function QuizResult({ score, passingScore, isPassed, courseSlug, 
         </div>
       </div>
 
-      {questions && selectedAnswers && (
+      {questions.length > 0 && (
         <div className="quiz-result__review">
           <h3 className="quiz-result__review-title">Quiz Review</h3>
           <div className="quiz-result__review-list">
@@ -39,9 +48,9 @@ export default function QuizResult({ score, passingScore, isPassed, courseSlug, 
               const isCorrect = selectedAnswers[idx] === q.correctAnswerIndex;
               return (
                 <div key={idx} className={`quiz-result__review-item ${isCorrect ? 'review-correct' : 'review-incorrect'}`}>
-                  <p className="quiz-result__review-question">{idx + 1}. {q.text}</p>
+                  <p className="quiz-result__review-question">{idx + 1}. {q.text || q.prompt}</p>
                   <p className="quiz-result__review-answer">
-                    <strong>Your Answer:</strong> {q.options[selectedAnswers[idx]]}
+                    <strong>Your Answer:</strong> {q.options[selectedAnswers[idx]] || 'Not answered'}
                     {isCorrect ? <Check size={14} className="text-passed" /> : <X size={14} className="text-failed" />}
                   </p>
                   {!isCorrect && (

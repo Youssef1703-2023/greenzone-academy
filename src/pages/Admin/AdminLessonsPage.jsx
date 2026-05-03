@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Eye, Languages, Pencil, Plus, Trash2 } from 'lucide-react';
+import { CheckCircle2, Eye, Languages, Pencil, Plus, Send, ShieldCheck, Trash2 } from 'lucide-react';
 import AdminLayout from '../../components/AdminLayout/AdminLayout';
 import { useLanguage } from '../../context/LanguageContext';
 import { deleteLesson, getCourses, getLessons, getPhases, saveLesson } from '../../services/adminDataService';
@@ -16,7 +16,32 @@ function createLessonContent(title = '') {
     objectives: [],
     keyTerms: [],
     sections: [],
+    workflow: {
+      stage: 'draft',
+      updatedAt: new Date().toISOString(),
+    },
   };
+}
+
+function getLessonReadiness(content) {
+  const checks = [
+    { key: 'overview', label: 'Overview written', passed: Boolean(content?.overview?.trim()) },
+    { key: 'objectives', label: 'Learning objectives', passed: (content?.objectives || []).filter(Boolean).length >= 2 },
+    { key: 'sections', label: 'Lesson sections', passed: (content?.sections || []).length >= 1 },
+    { key: 'summary', label: 'Summary block', passed: (content?.sections || []).some((section) => section.type === 'summary') },
+  ];
+  const passedCount = checks.filter((check) => check.passed).length;
+  return {
+    checks,
+    score: Math.round((passedCount / checks.length) * 100),
+    isReady: passedCount === checks.length,
+  };
+}
+
+function workflowLabel(action) {
+  if (action === 'publish') return 'published';
+  if (action === 'review') return 'review';
+  return 'draft';
 }
 
 export default function AdminLessonsPage() {
@@ -33,6 +58,7 @@ export default function AdminLessonsPage() {
   const [editorContent, setEditorContent] = useState(createLessonContent());
   const [hasPreviewed, setHasPreviewed] = useState(false);
   const [deleting, setDeleting] = useState(null);
+  const readiness = useMemo(() => getLessonReadiness(editorContent), [editorContent]);
 
   const filtered = useMemo(() => lessons.filter((lesson) => {
     const text = `${lesson.title} ${lesson.courseTitle} ${lesson.phaseTitle}`.toLowerCase();
@@ -52,9 +78,16 @@ export default function AdminLessonsPage() {
     const course = courses.find((item) => item.id === form.get('courseId')) || courses[0];
     const phase = phases.find((item) => item.id === form.get('phaseRecordId')) || phases[0];
     const lessonTitle = form.get('title');
+    const workflowStage = workflowLabel(submitAction);
     const contentJson = {
       ...editorContent,
       title: editorContent.title || lessonTitle,
+      workflow: {
+        ...(editorContent.workflow || {}),
+        stage: workflowStage,
+        readinessScore: readiness.score,
+        updatedAt: new Date().toISOString(),
+      },
     };
 
     await saveLesson({
@@ -67,7 +100,7 @@ export default function AdminLessonsPage() {
       order: Number(form.get('order')),
       title: lessonTitle,
       contentJson,
-      status: submitAction === 'publish' ? 'Published' : submitAction === 'draft' ? 'Draft' : form.get('status'),
+      status: submitAction === 'publish' ? 'Published' : 'Draft',
       englishStatus: form.get('englishStatus'),
       arabicStatus: form.get('arabicStatus'),
       translationSource: form.get('translationSource'),
@@ -128,6 +161,8 @@ export default function AdminLessonsPage() {
                 <th>{t('admin.order')}</th>
                 <th>{t('admin.englishStatus')}</th>
                 <th>{t('admin.arabicStatus')}</th>
+                <th>Workflow</th>
+                <th>Readiness</th>
                 <th>{t('admin.readingTime')}</th>
                 <th>{t('admin.completions')}</th>
                 <th>{t('admin.status')}</th>
@@ -142,6 +177,8 @@ export default function AdminLessonsPage() {
                   <td>{lesson.order}</td>
                   <td><AdminBadge status={lesson.englishStatus} /></td>
                   <td><AdminBadge status={lesson.arabicStatus} /></td>
+                  <td><AdminBadge status={lesson.workflowStage} /></td>
+                  <td>{lesson.contentJson?.workflow?.readinessScore ?? 'N/A'}%</td>
                   <td>{formatAdminValue(lesson.readingTime, language)}</td>
                   <td>{formatAdminValue(lesson.completionCount, language)}</td>
                   <td><AdminBadge status={lesson.status} /></td>
@@ -164,16 +201,17 @@ export default function AdminLessonsPage() {
             <>
               <button type="button" className="btn btn-secondary" onClick={() => setEditing(null)}>{t('common.cancel')}</button>
               <button form="lesson-form" type="submit" name="saveAction" value="draft" className="btn btn-secondary">{t('admin.draft')}</button>
+              <button form="lesson-form" type="submit" name="saveAction" value="review" className="btn btn-secondary"><Send size={16} /> Review</button>
               <button
                 form="lesson-form"
                 type="submit"
                 name="saveAction"
                 value="publish"
                 className="btn btn-primary"
-                disabled={!hasPreviewed}
-                title={!hasPreviewed ? 'Open Preview before publishing' : ''}
+                disabled={!hasPreviewed || !readiness.isReady}
+                title={!hasPreviewed ? 'Open Preview before publishing' : !readiness.isReady ? 'Complete the publishing checklist first' : ''}
               >
-                {t('admin.published')}
+                <ShieldCheck size={16} /> {t('admin.published')}
               </button>
             </>
           )}>
@@ -189,6 +227,24 @@ export default function AdminLessonsPage() {
               <label>{t('admin.translationSource')}<select name="translationSource" className="form-control" defaultValue={editing.translationSource || 'Missing'}><option>Manual</option><option>Google</option><option>Missing</option></select></label>
               <label>{t('admin.hashStatus')}<select name="hashStatus" className="form-control" defaultValue={editing.hashStatus || 'N/A'}><option>Fresh</option><option>Stale</option><option>N/A</option></select></label>
               <label>{t('admin.readingTime')}<input name="readingTime" className="form-control" defaultValue={editing.readingTime || 'N/A'} /></label>
+              <div className="admin-form-grid__wide lesson-publishing-workflow">
+                <div className="lesson-publishing-workflow__header">
+                  <div>
+                    <span>Publishing Workflow</span>
+                    <h3>{readiness.score}% ready</h3>
+                  </div>
+                  <AdminBadge status={readiness.isReady ? 'Ready to Publish' : 'Needs Review'} />
+                </div>
+                <div className="lesson-publishing-workflow__checks">
+                  {readiness.checks.map((check) => (
+                    <div className={check.passed ? 'passed' : ''} key={check.key}>
+                      <CheckCircle2 size={16} />
+                      <span>{check.label}</span>
+                    </div>
+                  ))}
+                </div>
+                {!hasPreviewed && <p>Open the lesson preview once before publishing.</p>}
+              </div>
               <div className="admin-form-grid__wide">
                 <AdminLessonBuilder value={editorContent} onChange={setEditorContent} fallbackTitle={editing.title} onPreview={() => setHasPreviewed(true)} />
               </div>

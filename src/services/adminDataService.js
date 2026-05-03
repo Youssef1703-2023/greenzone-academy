@@ -9,6 +9,9 @@ function fromStatus(status) {
   if (status === 'archived') return 'Archived';
   if (status === 'disabled') return 'Disabled';
   if (status === 'active') return 'Active';
+  if (status === 'completed') return 'Completed';
+  if (status === 'in_progress') return 'In Progress';
+  if (status === 'not_started') return 'Not Started';
   return 'Draft';
 }
 
@@ -21,6 +24,14 @@ function toContentStatus(status) {
 
 function toUserStatus(status) {
   return String(status || '').toLowerCase() === 'disabled' ? 'disabled' : 'active';
+}
+
+function fromWorkflowStage(contentJson, status) {
+  if (status === 'published') return 'Published';
+  const stage = contentJson?.workflow?.stage || contentJson?.workflowStatus;
+  if (stage === 'review') return 'In Review';
+  if (stage === 'archived') return 'Archived';
+  return 'Draft';
 }
 
 function dateOnly(value) {
@@ -233,6 +244,7 @@ export async function getLessons() {
       contentJson: lesson.content_json,
       contentHash: lesson.content_hash,
       status: fromStatus(lesson.status),
+      workflowStage: fromWorkflowStage(lesson.content_json, lesson.status),
       route: `/courses/${lesson.courses?.slug}/phase/${lesson.phases?.phase_number}/lesson/${lesson.lesson_number}`,
       englishStatus: lesson.content_json ? 'Ready' : 'Missing',
       arabicStatus: arabic?.status === 'completed' ? 'Ready' : arabic?.status === 'stale' ? 'Stale' : 'Missing',
@@ -339,14 +351,26 @@ export async function deleteQuiz(id) {
 
 export async function getStudents() {
   const client = requireSupabase();
-  const [profiles, progress, attempts] = await Promise.all([
+  const [profiles, progress, attempts, lessons] = await Promise.all([
     safeQuery(client.from('profiles').select('*').eq('role', 'student').order('created_at')),
-    safeQuery(client.from('student_progress').select('user_id,status')),
+    safeQuery(client.from('student_progress').select('user_id,status,lesson_id,lessons(id,phase_id)')),
     safeQuery(client.from('quiz_attempts').select('user_id,score')),
+    safeQuery(client.from('lessons').select('id,phase_id').eq('status', 'published')),
   ]);
+
+  const lessonsByPhase = lessons.reduce((map, lesson) => {
+    const list = map.get(lesson.phase_id) || [];
+    list.push(lesson.id);
+    map.set(lesson.phase_id, list);
+    return map;
+  }, new Map());
 
   return profiles.map((profile) => {
     const studentProgress = progress.filter((item) => item.user_id === profile.id && item.status === 'completed');
+    const completedLessonIds = new Set(studentProgress.map((item) => item.lesson_id));
+    const completedPhases = [...lessonsByPhase.values()].filter((phaseLessons) => (
+      phaseLessons.length && phaseLessons.every((lessonId) => completedLessonIds.has(lessonId))
+    )).length;
     const studentAttempts = attempts.filter((item) => item.user_id === profile.id);
     return {
       id: profile.id,
@@ -354,15 +378,90 @@ export async function getStudents() {
       email: profile.email,
       role: profile.role,
       status: fromStatus(profile.status),
-      progress: unavailable,
+      progress: lessons.length ? Math.round((studentProgress.length / lessons.length) * 100) : unavailable,
       completedLessons: studentProgress.length,
-      completedPhases: unavailable,
+      completedPhases,
       joinedAt: dateOnly(profile.created_at),
       lastActive: dateOnly(profile.last_active_at),
       averageScore: average(studentAttempts.map((attempt) => attempt.score)),
       quizAttempts: studentAttempts.length,
     };
   });
+}
+
+export async function getStudentDetail(studentId) {
+  const client = requireSupabase();
+  const [profiles, progress, attempts, phases, lessons] = await Promise.all([
+    safeQuery(client.from('profiles').select('*').eq('id', studentId).limit(1)),
+    safeQuery(client
+      .from('student_progress')
+      .select('*, lessons(id,title,lesson_number,phase_id,phases(title,phase_number),courses(title,slug))')
+      .eq('user_id', studentId)
+      .order('updated_at', { ascending: false })),
+    safeQuery(client
+      .from('quiz_attempts')
+      .select('*, quizzes(title,slug,passing_score,phases(title,phase_number))')
+      .eq('user_id', studentId)
+      .order('created_at', { ascending: false })),
+    safeQuery(client.from('phases').select('id,title,phase_number').order('phase_number')),
+    safeQuery(client.from('lessons').select('id,phase_id,status').eq('status', 'published')),
+  ]);
+
+  const profile = profiles[0];
+  if (!profile) throw new Error('Student not found.');
+
+  const completedProgress = progress.filter((item) => item.status === 'completed');
+  const completedLessonIds = new Set(completedProgress.map((item) => item.lesson_id));
+  const phaseProgress = phases.map((phase) => {
+    const phaseLessons = lessons.filter((lesson) => lesson.phase_id === phase.id);
+    const completedLessons = phaseLessons.filter((lesson) => completedLessonIds.has(lesson.id)).length;
+    return {
+      id: phase.id,
+      title: phase.title,
+      phaseNumber: phase.phase_number,
+      totalLessons: phaseLessons.length,
+      completedLessons,
+      progress: phaseLessons.length ? Math.round((completedLessons / phaseLessons.length) * 100) : 0,
+      status: phaseLessons.length && completedLessons === phaseLessons.length ? 'Completed' : completedLessons ? 'In Progress' : 'Not Started',
+    };
+  });
+
+  return {
+    id: profile.id,
+    name: profile.full_name,
+    email: profile.email,
+    role: profile.role,
+    status: fromStatus(profile.status),
+    joinedAt: dateOnly(profile.created_at),
+    lastActive: dateOnly(profile.last_active_at),
+    summary: {
+      completedLessons: completedProgress.length,
+      totalLessons: lessons.length,
+      overallProgress: lessons.length ? Math.round((completedProgress.length / lessons.length) * 100) : unavailable,
+      quizAttempts: attempts.length,
+      averageScore: average(attempts.map((attempt) => attempt.score)),
+      passedQuizzes: attempts.filter((attempt) => attempt.passed).length,
+    },
+    phaseProgress,
+    recentLessons: progress.slice(0, 10).map((item) => ({
+      id: item.id,
+      title: item.lessons?.title || 'Lesson',
+      phase: item.lessons?.phases?.title || 'Phase',
+      lessonNumber: item.lessons?.lesson_number,
+      status: fromStatus(item.status),
+      updatedAt: dateOnly(item.updated_at),
+    })),
+    quizAttempts: attempts.map((attempt) => ({
+      id: attempt.id,
+      quizName: attempt.quizzes?.title || 'Quiz',
+      phase: attempt.quizzes?.phases?.title || 'Phase',
+      score: attempt.score,
+      passingScore: attempt.quizzes?.passing_score,
+      attemptNumber: attempt.attempt_number,
+      status: attempt.passed ? 'Passed' : 'Failed',
+      date: dateOnly(attempt.created_at),
+    })),
+  };
 }
 
 export async function saveStudent(record) {

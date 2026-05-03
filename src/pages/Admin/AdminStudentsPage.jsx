@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
-import { Eye, RotateCcw, ToggleLeft, ToggleRight } from 'lucide-react';
+import { BookOpen, ClipboardCheck, Eye, RotateCcw, ToggleLeft, ToggleRight, TrendingUp } from 'lucide-react';
 import AdminLayout from '../../components/AdminLayout/AdminLayout';
 import { useLanguage } from '../../context/LanguageContext';
-import { getScores, getStudents, resetStudentProgress, toggleStudentStatus } from '../../services/adminDataService';
+import { getScores, getStudentDetail, getStudents, resetStudentProgress, toggleStudentStatus } from '../../services/adminDataService';
 import { AdminBadge, AdminErrorState, AdminModal, AdminPageHeader, AdminToolbar, ConfirmModal, formatAdminValue, useAdminData } from './AdminShared';
 import './AdminPages.css';
 
@@ -20,6 +20,9 @@ export default function AdminStudentsPage() {
   const [statusFilter, setStatusFilter] = useState('All');
   const [progressFilter, setProgressFilter] = useState('All');
   const [selectedStudent, setSelectedStudent] = useState(null);
+  const [selectedDetail, setSelectedDetail] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState('');
   const [resetTarget, setResetTarget] = useState(null);
 
   const filtered = useMemo(() => students.filter((student) => {
@@ -37,6 +40,20 @@ export default function AdminStudentsPage() {
     const rows = studentScores(student);
     if (!rows.length) return null;
     return Math.round(rows.reduce((sum, score) => sum + score.score, 0) / rows.length);
+  }
+
+  async function openStudentDetail(student) {
+    setSelectedStudent(student);
+    setSelectedDetail(null);
+    setDetailError('');
+    setDetailLoading(true);
+    try {
+      setSelectedDetail(await getStudentDetail(student.id));
+    } catch (requestError) {
+      setDetailError(requestError?.message || 'Student detail could not be loaded.');
+    } finally {
+      setDetailLoading(false);
+    }
   }
 
   return (
@@ -80,14 +97,14 @@ export default function AdminStudentsPage() {
                 <tr key={student.id}>
                   <td className="admin-table__highlight">{student.name}</td>
                   <td>{student.email}</td>
-                  <td>{student.progress}%</td>
+                  <td>{formatAdminValue(student.progress, language, '%')}</td>
                   <td>{student.completedLessons}</td>
                   <td>{student.completedPhases}</td>
                   <td>{formatAdminValue(student.lastActive, language)}</td>
                   <td><AdminBadge status={student.status} /></td>
                   <td>
                     <div className="admin-table__actions">
-                      <button className="admin-table__btn" onClick={() => setSelectedStudent(student)}><Eye size={14} />{t('admin.view')}</button>
+                      <button className="admin-table__btn" onClick={() => openStudentDetail(student)}><Eye size={14} />{t('admin.view')}</button>
                       <button className="admin-table__btn" onClick={async () => { await toggleStudentStatus(student); await refresh(); }}>
                         {student.status === 'Disabled' ? <ToggleRight size={14} /> : <ToggleLeft size={14} />}
                         {student.status === 'Disabled' ? t('admin.enable') : t('admin.disable')}
@@ -102,21 +119,70 @@ export default function AdminStudentsPage() {
         </div>
 
         {selectedStudent && (
-          <AdminModal title={t('admin.studentDetails')} onClose={() => setSelectedStudent(null)} footer={<button type="button" className="btn btn-primary" onClick={() => setSelectedStudent(null)}>{t('admin.close')}</button>}>
-            <div className="admin-detail-grid">
-              <span>{t('admin.name')}</span><strong>{selectedStudent.name}</strong>
-              <span>{t('admin.email')}</span><strong>{selectedStudent.email}</strong>
-              <span>{t('admin.role')}</span><strong>{selectedStudent.role}</strong>
-              <span>{t('admin.status')}</span><strong><AdminBadge status={selectedStudent.status} /></strong>
-              <span>{t('admin.joinedDate')}</span><strong>{formatAdminValue(selectedStudent.joinedAt, language)}</strong>
-              <span>{t('admin.overallProgress')}</span><strong>{selectedStudent.progress}%</strong>
-              <span>{t('admin.completedLessons')}</span><strong>{selectedStudent.completedLessons}</strong>
-              <span>{t('admin.completedPhases')}</span><strong>{selectedStudent.completedPhases}</strong>
-              <span>{t('admin.quizAttempts')}</span><strong>{studentScores(selectedStudent).length}</strong>
-              <span>{t('admin.averageScore')}</span><strong>{formatAdminValue(averageScore(selectedStudent), language, '%')}</strong>
-              <span>{t('admin.lastActive')}</span><strong>{formatAdminValue(selectedStudent.lastActive, language)}</strong>
-              <span>{t('admin.adminNotes')}</span><strong>{t('admin.notesPlaceholder')}</strong>
-            </div>
+          <AdminModal wide title={t('admin.studentDetails')} onClose={() => setSelectedStudent(null)} footer={<button type="button" className="btn btn-primary" onClick={() => setSelectedStudent(null)}>{t('admin.close')}</button>}>
+            {detailLoading && <div className="admin-loading">Loading student profile...</div>}
+            {detailError && <AdminErrorState message={detailError} />}
+            {selectedDetail && (
+              <div className="student-detail">
+                <section className="student-detail__hero">
+                  <div className="student-detail__avatar">{selectedDetail.name?.charAt(0) || 'S'}</div>
+                  <div>
+                    <span>Student Profile</span>
+                    <h3>{selectedDetail.name}</h3>
+                    <p>{selectedDetail.email}</p>
+                  </div>
+                  <AdminBadge status={selectedDetail.status} />
+                </section>
+
+                <section className="student-detail__stats">
+                  <div><TrendingUp size={18} /><span>Overall Progress</span><strong>{formatAdminValue(selectedDetail.summary.overallProgress, language, '%')}</strong></div>
+                  <div><BookOpen size={18} /><span>Completed Lessons</span><strong>{selectedDetail.summary.completedLessons} / {selectedDetail.summary.totalLessons}</strong></div>
+                  <div><ClipboardCheck size={18} /><span>Quiz Attempts</span><strong>{selectedDetail.summary.quizAttempts}</strong></div>
+                  <div><ClipboardCheck size={18} /><span>Average Score</span><strong>{formatAdminValue(selectedDetail.summary.averageScore ?? averageScore(selectedStudent), language, '%')}</strong></div>
+                </section>
+
+                <section className="student-detail__section">
+                  <h4>Phase Progress</h4>
+                  <div className="student-detail__phase-list">
+                    {selectedDetail.phaseProgress.map((phase) => (
+                      <div className="student-detail__phase" key={phase.id}>
+                        <div>
+                          <strong>Phase {phase.phaseNumber}: {phase.title}</strong>
+                          <span>{phase.completedLessons} / {phase.totalLessons} lessons - {phase.status}</span>
+                        </div>
+                        <div className="student-detail__bar"><span style={{ width: `${phase.progress}%` }} /></div>
+                        <b>{phase.progress}%</b>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+
+                <section className="student-detail__columns">
+                  <div className="student-detail__section">
+                    <h4>Recent Lessons</h4>
+                    <div className="student-detail__list">
+                      {selectedDetail.recentLessons.length ? selectedDetail.recentLessons.map((lesson) => (
+                        <div key={lesson.id}>
+                          <strong>{lesson.title}</strong>
+                          <span>{lesson.phase} - {lesson.status} - {formatAdminValue(lesson.updatedAt, language)}</span>
+                        </div>
+                      )) : <p>No lesson activity yet.</p>}
+                    </div>
+                  </div>
+                  <div className="student-detail__section">
+                    <h4>Quiz Attempts</h4>
+                    <div className="student-detail__list">
+                      {selectedDetail.quizAttempts.length ? selectedDetail.quizAttempts.map((attempt) => (
+                        <div key={attempt.id}>
+                          <strong>{attempt.quizName}</strong>
+                          <span>{attempt.phase} - Attempt {attempt.attemptNumber} - {attempt.score}% - {attempt.status}</span>
+                        </div>
+                      )) : <p>No quiz attempts yet.</p>}
+                    </div>
+                  </div>
+                </section>
+              </div>
+            )}
           </AdminModal>
         )}
 

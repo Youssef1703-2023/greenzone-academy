@@ -1,4 +1,4 @@
-/* eslint-disable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps, react-hooks/immutability */
+/* eslint-disable react-hooks/exhaustive-deps, react-hooks/immutability */
 import { useState, useEffect } from 'react';
 import { useParams, Navigate, Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
@@ -11,12 +11,14 @@ import QuizQuestion from '../../components/Quiz/QuizQuestion';
 import QuizResult from '../../components/Quiz/QuizResult';
 import { getPhaseData, savePhaseData } from '../../data/phaseData';
 import { getCourseData, saveCourseData } from '../../data/coursePageData';
-import { saveQuizAttempt } from '../../services/supabaseStudentService';
+import { fetchPhaseQuizExperience, saveQuizAttempt } from '../../services/supabaseStudentService';
 import './PhaseQuizPage.css';
 
 export default function PhaseQuizPage() {
   const { slug, phaseId } = useParams();
   const [phase, setPhase] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [loadNotice, setLoadNotice] = useState('');
 
   // Quiz States
   const [quizStatus, setQuizStatus] = useState('locked'); // locked, ready, in-progress, passed, failed
@@ -38,21 +40,52 @@ export default function PhaseQuizPage() {
   }, [quizStatus, timeLeft]);
 
   useEffect(() => {
-    const data = getPhaseData(Number(phaseId));
-    if (data) {
-      setPhase(data);
-      
-      // Determine initial quiz state
-      if (data.quizPassed) {
-        setQuizStatus('passed');
-        setScore(data.quizScore || 100);
-      } else if (data.completedLessons >= data.totalLessons) {
-        setQuizStatus('ready');
-      } else {
-        setQuizStatus('locked');
+    let isMounted = true;
+
+    async function loadQuiz() {
+      setLoading(true);
+      setLoadNotice('');
+      let data;
+
+      try {
+        data = await fetchPhaseQuizExperience({ courseSlug: slug, phaseId });
+      } catch {
+        data = getPhaseData(Number(phaseId));
+        setLoadNotice('Showing local quiz fallback until a published Supabase quiz is available.');
       }
+
+      if (!isMounted) return;
+      if (data) {
+        setPhase(data);
+
+        if (data.quizPassed) {
+          setQuizStatus('passed');
+          setScore(data.quizScore || 100);
+        } else if (data.quizUnlocked || data.completedLessons >= data.totalLessons) {
+          setQuizStatus('ready');
+        } else {
+          setQuizStatus('locked');
+        }
+      }
+      setLoading(false);
     }
-  }, [phaseId]);
+
+    loadQuiz();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [phaseId, slug]);
+
+  if (loading) {
+    return (
+      <StudentLayout>
+        <div className="phase-quiz-page">
+          <div className="phase-quiz-page__loading">Loading quiz experience...</div>
+        </div>
+      </StudentLayout>
+    );
+  }
 
   if (!phase) return null;
 
@@ -61,11 +94,13 @@ export default function PhaseQuizPage() {
   }
 
   const { quiz } = phase;
+  const hasQuestions = quiz?.questions?.length > 0;
 
   const handleStartQuiz = () => {
     setQuizStatus('in-progress');
     setCurrentQuestionIndex(0);
     setSelectedAnswers({});
+    setScore(0);
     setTimeLeft(10 * 60); // Reset timer to 10 minutes
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -91,6 +126,8 @@ export default function PhaseQuizPage() {
 
   const handleSubmit = async () => {
     // Calculate score
+    if (!hasQuestions) return;
+
     let correctCount = 0;
     quiz.questions.forEach((q, idx) => {
       if (selectedAnswers[idx] === q.correctAnswerIndex) {
@@ -117,10 +154,12 @@ export default function PhaseQuizPage() {
     }
     
     setPhase(updatedPhase);
-    savePhaseData(Number(phaseId), updatedPhase);
+    if (phase.source !== 'supabase') {
+      savePhaseData(Number(phaseId), updatedPhase);
+    }
 
     // Update Course data to unlock phase 2
-    if (passed) {
+    if (passed && phase.source !== 'supabase') {
       const courseData = getCourseData(slug);
       const pIndex = courseData.phases.findIndex(p => p.id === Number(phaseId));
       if (pIndex !== -1) {
@@ -171,7 +210,14 @@ export default function PhaseQuizPage() {
           Back to Phase
         </Link>
 
-        {quizStatus === 'locked' ? (
+        {loadNotice && <div className="phase-quiz-page__notice">{loadNotice}</div>}
+
+        {!hasQuestions ? (
+          <div className="phase-quiz-page__empty">
+            <h2>No published quiz questions yet</h2>
+            <p>The quiz exists, but it needs questions before students can start.</p>
+          </div>
+        ) : quizStatus === 'locked' ? (
           <QuizLocked 
             completedLessons={phase.completedLessons} 
             totalLessons={phase.totalLessons}
