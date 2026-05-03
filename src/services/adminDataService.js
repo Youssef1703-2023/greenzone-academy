@@ -44,6 +44,19 @@ function average(values) {
   return Math.round(usable.reduce((sum, value) => sum + value, 0) / usable.length);
 }
 
+function dayKey(value) {
+  return new Date(value).toISOString().slice(0, 10);
+}
+
+function buildLastSevenDays() {
+  const today = new Date();
+  return Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(today);
+    date.setDate(today.getDate() - (6 - index));
+    return date.toISOString().slice(0, 10);
+  });
+}
+
 function normalizeQuestion(question, index) {
   const options = Array.isArray(question.options_json)
     ? question.options_json
@@ -606,7 +619,12 @@ export async function fetchBackendAdminOverview() {
     completedArabicTranslations,
     staleArabicTranslations,
     attempts,
+    attemptsDetail,
     progressRows,
+    progressDetail,
+    studentProfiles,
+    lessonsForAnalytics,
+    phasesForAnalytics,
     auditLog,
   ] = await Promise.all([
     countRows('courses'),
@@ -624,7 +642,12 @@ export async function fetchBackendAdminOverview() {
     countRows('translations', (query) => query.eq('target_lang', 'ar').eq('status', 'completed')),
     countRows('translations', (query) => query.eq('target_lang', 'ar').eq('status', 'stale')),
     safeQuery(client.from('quiz_attempts').select('score,passed')),
+    safeQuery(client.from('quiz_attempts').select('score,passed,created_at,quizzes(title,phase_id,phases(title,phase_number))')),
     safeQuery(client.from('student_progress').select('user_id,status').eq('status', 'completed')),
+    safeQuery(client.from('student_progress').select('user_id,status,lesson_id,updated_at,lessons(id,title,lesson_number,phase_id,phases(title,phase_number))').eq('status', 'completed')),
+    safeQuery(client.from('profiles').select('id,created_at,status').eq('role', 'student')),
+    safeQuery(client.from('lessons').select('id,title,lesson_number,phase_id,status,phases(title,phase_number)').eq('status', 'published')),
+    safeQuery(client.from('phases').select('id,title,phase_number').order('phase_number')),
     safeQuery(client.from('admin_audit_log').select('*').order('created_at', { ascending: false }).limit(8)),
   ]);
 
@@ -635,6 +658,87 @@ export async function fetchBackendAdminOverview() {
     return map;
   }, new Map());
   const completedLessons = [...completedByStudent.values()];
+  const totalPublishedLessons = lessonsForAnalytics.length || publishedLessons;
+  const oneWeekAgo = new Date();
+  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+  const activeStudentIds = new Set(studentProfiles.map((profile) => profile.id));
+  const studentsWithProgress = new Set(progressRows.map((item) => item.user_id));
+  const phaseOne = phasesForAnalytics.find((phase) => Number(phase.phase_number) === 1);
+  const phaseOneLessonIds = new Set(
+    lessonsForAnalytics
+      .filter((lesson) => lesson.phase_id === phaseOne?.id)
+      .map((lesson) => lesson.id),
+  );
+  const phaseOneCompletedByStudent = progressDetail.reduce((map, item) => {
+    if (!phaseOneLessonIds.has(item.lesson_id)) return map;
+    const list = map.get(item.user_id) || new Set();
+    list.add(item.lesson_id);
+    map.set(item.user_id, list);
+    return map;
+  }, new Map());
+  const studentsCompletedPhaseOne = phaseOneLessonIds.size
+    ? [...phaseOneCompletedByStudent.values()].filter((set) => set.size >= phaseOneLessonIds.size).length
+    : 0;
+  const trendDays = buildLastSevenDays();
+  const trend = trendDays.map((date) => ({
+    date,
+    newStudents: studentProfiles.filter((profile) => dayKey(profile.created_at) === date).length,
+    lessonCompletions: progressDetail.filter((item) => dayKey(item.updated_at) === date).length,
+    quizAttempts: attemptsDetail.filter((item) => dayKey(item.created_at) === date).length,
+  }));
+
+  const completionsByLesson = progressDetail.reduce((map, item) => {
+    map.set(item.lesson_id, (map.get(item.lesson_id) || 0) + 1);
+    return map;
+  }, new Map());
+  const lessonHotspots = lessonsForAnalytics
+    .map((lesson) => {
+      const completedCount = completionsByLesson.get(lesson.id) || 0;
+      const completionRate = activeStudentIds.size ? Math.round((completedCount / activeStudentIds.size) * 100) : 0;
+      return {
+        id: lesson.id,
+        title: lesson.title,
+        lessonNumber: lesson.lesson_number,
+        phase: lesson.phases?.title || 'Phase',
+        completedCount,
+        completionRate,
+        needsAttention: activeStudentIds.size > 0 && completionRate < 50,
+      };
+    })
+    .sort((a, b) => a.completionRate - b.completionRate || b.completedCount - a.completedCount)
+    .slice(0, 6);
+
+  const phaseAnalytics = phasesForAnalytics.map((phase) => {
+    const phaseLessons = lessonsForAnalytics.filter((lesson) => lesson.phase_id === phase.id);
+    const completedEvents = progressDetail.filter((item) => item.lessons?.phase_id === phase.id).length;
+    const possibleCompletions = Math.max(phaseLessons.length * activeStudentIds.size, 1);
+    return {
+      id: phase.id,
+      title: phase.title,
+      phaseNumber: phase.phase_number,
+      lessons: phaseLessons.length,
+      completionRate: Math.round((completedEvents / possibleCompletions) * 100),
+    };
+  });
+
+  const quizMap = attemptsDetail.reduce((map, attempt) => {
+    const title = attempt.quizzes?.title || 'Quiz';
+    const record = map.get(title) || { title, attempts: 0, passed: 0, scores: [] };
+    record.attempts += 1;
+    if (attempt.passed) record.passed += 1;
+    record.scores.push(attempt.score);
+    map.set(title, record);
+    return map;
+  }, new Map());
+  const quizPerformance = [...quizMap.values()]
+    .map((quiz) => ({
+      title: quiz.title,
+      attempts: quiz.attempts,
+      passRate: quiz.attempts ? Math.round((quiz.passed / quiz.attempts) * 100) : unavailable,
+      averageScore: average(quiz.scores),
+    }))
+    .sort((a, b) => b.attempts - a.attempts)
+    .slice(0, 5);
 
   return {
     content: {
@@ -651,14 +755,16 @@ export async function fetchBackendAdminOverview() {
       totalStudents,
       activeStudents,
       disabledStudents,
-      newStudentsThisWeek: unavailable,
+      newStudentsThisWeek: studentProfiles.filter((profile) => new Date(profile.created_at) >= oneWeekAgo).length,
     },
     progress: {
-      averageCourseProgress: unavailable,
+      averageCourseProgress: totalPublishedLessons
+        ? average([...activeStudentIds].map((id) => Math.round(((completedByStudent.get(id) || 0) / totalPublishedLessons) * 100)))
+        : unavailable,
       averageLessonsCompleted: average(completedLessons),
-      studentsCompletedPhase1: unavailable,
-      studentsInProgress: unavailable,
-      studentsNotStarted: unavailable,
+      studentsCompletedPhase1: studentsCompletedPhaseOne,
+      studentsInProgress: studentsWithProgress.size,
+      studentsNotStarted: Math.max(totalStudents - studentsWithProgress.size, 0),
     },
     quizzes: {
       totalAttempts: attempts.length,
@@ -690,6 +796,12 @@ export async function fetchBackendAdminOverview() {
       googleTranslateConfigured: false,
       databaseConnected: true,
       lastRefreshTime: new Date().toISOString(),
+    },
+    analytics: {
+      trend,
+      lessonHotspots,
+      phaseAnalytics,
+      quizPerformance,
     },
   };
 }

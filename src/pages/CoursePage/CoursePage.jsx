@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useParams, Navigate } from 'react-router-dom';
+import { Link, Navigate, useParams } from 'react-router-dom';
+import { ArrowRight, PlayCircle, Target } from 'lucide-react';
 import StudentLayout from '../../components/StudentLayout/StudentLayout';
 import Breadcrumbs from '../../components/UI/Breadcrumbs/Breadcrumbs';
 import CourseHeader from '../../components/Course/CourseHeader';
@@ -7,6 +8,7 @@ import CompletionRules from '../../components/Course/CompletionRules';
 import PhaseCard from '../../components/Course/PhaseCard';
 import { getCourseData, completionRules } from '../../data/coursePageData';
 import { useLanguage } from '../../context/LanguageContext';
+import { fetchStudentCourseExperience } from '../../services/supabaseStudentService';
 import './CoursePage.css';
 
 export default function CoursePage() {
@@ -15,11 +17,23 @@ export default function CoursePage() {
   const { t } = useLanguage();
 
   useEffect(() => {
-    // In a real app, this would fetch the course by slug from the API
-    const data = getCourseData(slug);
-    if (data) {
-      setCourse(data);
+    let mounted = true;
+
+    async function loadCourse() {
+      try {
+        const liveCourse = await fetchStudentCourseExperience(slug);
+        if (mounted) setCourse(liveCourse);
+      } catch {
+        const data = getCourseData(slug);
+        if (mounted && data) setCourse(data);
+      }
     }
+
+    loadCourse();
+
+    return () => {
+      mounted = false;
+    };
   }, [slug]);
 
   if (!course) return null;
@@ -34,7 +48,25 @@ export default function CoursePage() {
         { label: t('common.courses'), to: '/courses' },
         { label: course.title }
       ]} />
-      <CourseHeader course={course} />
+      <CourseHeader course={course} continueRoute={course.continueRoute} />
+
+      <section className="course-continue-panel">
+        <div className="course-continue-panel__icon">
+          <Target size={22} />
+        </div>
+        <div className="course-continue-panel__body">
+          <span>Smart Continue</span>
+          <h2>{course.currentPhaseTitle || 'Continue your current phase'}</h2>
+          <p>
+            Resume from the next unlocked lesson, or jump straight to the phase quiz when all lessons are complete.
+          </p>
+        </div>
+        <Link to={course.continueRoute || `/courses/${course.slug}/phase/1`} className="btn btn-primary course-continue-panel__btn">
+          <PlayCircle size={17} />
+          Continue Learning
+          <ArrowRight size={17} />
+        </Link>
+      </section>
 
       <CompletionRules rules={completionRules} />
 

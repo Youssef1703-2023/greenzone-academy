@@ -13,7 +13,7 @@ import CompletionModal from '../../components/Lesson/CompletionModal';
 import { getPhaseData, savePhaseData } from '../../data/phaseData';
 import { useLanguage } from '../../context/LanguageContext';
 import { useLessonContent } from '../../hooks/useLessonContent';
-import { saveLessonCompletion } from '../../services/supabaseStudentService';
+import { fetchStudentPhasePlayer, saveLessonCompletion, saveLessonStarted } from '../../services/supabaseStudentService';
 import './LessonPage.css';
 
 export default function LessonPage() {
@@ -43,7 +43,22 @@ export default function LessonPage() {
   }, [lessonId, phaseId]);
 
   useEffect(() => {
-    setPhase(getPhaseData(Number(phaseId)));
+    let mounted = true;
+
+    async function loadPhase() {
+      try {
+        const livePhase = await fetchStudentPhasePlayer({ courseSlug: slug, phaseId });
+        if (mounted) setPhase(livePhase);
+      } catch {
+        if (mounted) setPhase(getPhaseData(Number(phaseId)));
+      }
+    }
+
+    loadPhase();
+
+    return () => {
+      mounted = false;
+    };
   }, [phaseId, slug]);
 
   useEffect(() => {
@@ -72,6 +87,15 @@ export default function LessonPage() {
     };
   }, [lessonId, phaseId]);
 
+  const lessonIndex = phase?.lessons?.findIndex((l) => l.id === currentLessonId) ?? -1;
+  const lesson = lessonIndex >= 0 ? phase.lessons[lessonIndex] : null;
+
+  // Marking a lesson as started lets Supabase remember the user's real continue point.
+  useEffect(() => {
+    if (!phase || phase.source !== 'supabase' || !lesson || lesson.status === 'locked' || lesson.status === 'completed') return;
+    saveLessonStarted({ courseSlug: slug, phaseId, lessonId: currentLessonId }).catch(() => {});
+  }, [currentLessonId, lesson, phase, phaseId, slug]);
+
   if (!phase) {
     return null; 
   }
@@ -79,9 +103,6 @@ export default function LessonPage() {
   if (phase.courseSlug !== slug) {
     return <Navigate to={`/courses/${slug}`} replace />;
   }
-
-  const lessonIndex = phase.lessons.findIndex((l) => l.id === currentLessonId);
-  const lesson = phase.lessons[lessonIndex];
 
   if (!lesson) {
     return <Navigate to={`/courses/${slug}/phase/${phaseId}`} replace />;
@@ -95,7 +116,10 @@ export default function LessonPage() {
   const phaseProgress = phase.totalLessons ? Math.round((completedCount / phase.totalLessons) * 100) : phase.progress;
 
   const handleMarkCompleted = async () => {
-    const updatedPhase = { ...phase };
+    const updatedPhase = {
+      ...phase,
+      lessons: phase.lessons.map((item) => ({ ...item })),
+    };
     
     // 1. Mark current lesson completed
     updatedPhase.lessons[lessonIndex].status = 'completed';
@@ -119,9 +143,15 @@ export default function LessonPage() {
     }
 
     setPhase(updatedPhase);
-    savePhaseData(Number(phaseId), updatedPhase);
+    if (phase.source !== 'supabase') {
+      savePhaseData(Number(phaseId), updatedPhase);
+    }
     try {
       await saveLessonCompletion({ courseSlug: slug, phaseId, lessonId: currentLessonId });
+      if (phase.source === 'supabase') {
+        const refreshedPhase = await fetchStudentPhasePlayer({ courseSlug: slug, phaseId });
+        setPhase(refreshedPhase);
+      }
     } catch {
       // Local phase progress remains as an emergency fallback when Supabase is unavailable.
     }

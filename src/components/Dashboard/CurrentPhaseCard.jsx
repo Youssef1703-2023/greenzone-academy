@@ -3,10 +3,11 @@ import { Layers, BookOpen, ClipboardCheck, ArrowLeft, ArrowRight, Clock } from '
 import { useLanguage } from '../../context/LanguageContext';
 import './CurrentPhaseCard.css';
 
-export default function CurrentPhaseCard({ progress }) {
+export default function CurrentPhaseCard({ progress, courseSlug = 'cybersecurity-fundamentals' }) {
   const { language, t } = useLanguage();
   const ArrowIcon = language === 'ar' ? ArrowLeft : ArrowRight;
-  const phaseProgress = Math.round((progress.completedLessons / progress.currentPhaseLessons) * 100) || 0;
+  const phaseCompletedLessons = progress.currentPhaseCompletedLessons ?? progress.completedLessons;
+  const phaseProgress = Math.round((phaseCompletedLessons / progress.currentPhaseLessons) * 100) || 0;
 
   return (
     <div className="current-phase-card">
@@ -51,7 +52,7 @@ export default function CurrentPhaseCard({ progress }) {
         </div>
       </div>
 
-      <Link to={`/courses/cybersecurity-fundamentals/phase/${progress.currentPhase}`} className="btn btn-secondary current-phase-card__btn">
+      <Link to={`/courses/${courseSlug}/phase/${progress.currentPhase}`} className="btn btn-secondary current-phase-card__btn">
         {t('dashboard.viewPhase')}
         <ArrowIcon size={16} />
       </Link>

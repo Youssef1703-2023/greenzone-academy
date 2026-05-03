@@ -18,20 +18,89 @@ import {
   mockRecentActivity,
   mockQuickActions,
 } from '../../data/dashboardData';
+import { fetchStudentCourseExperience } from '../../services/supabaseStudentService';
 import './DashboardPage.css';
+
+function buildDashboardState(course) {
+  return {
+    course,
+    progress: {
+      overallProgress: course.progress,
+      completedLessons: course.completedLessons || 0,
+      totalLessons: course.totalLessons,
+      latestQuizScore: course.latestQuizScore,
+      currentPhase: course.currentPhase || 1,
+      currentPhaseTitle: course.currentPhaseTitle || 'Cybersecurity Introduction',
+      currentPhaseLessons: course.currentPhaseLessons || 0,
+      currentPhaseCompletedLessons: course.currentPhaseCompletedLessons || 0,
+      currentPhaseStatus: course.currentPhaseStatus || 'In Progress',
+    },
+    recentActivity: [
+      {
+        id: 'continue',
+        type: 'lesson',
+        text: `Ready to continue: ${course.currentPhaseTitle || course.title}`,
+        time: course.source === 'supabase' ? 'Live from Supabase' : 'Local fallback',
+      },
+      {
+        id: 'progress',
+        type: 'phase',
+        text: `${course.completedLessons || 0} of ${course.totalLessons} lessons completed`,
+        time: `${course.progress || 0}% complete`,
+      },
+    ],
+    quickActions: mockQuickActions.map((action) => {
+      if (action.id === 'continue') return { ...action, route: course.continueRoute || `/courses/${course.slug || course.id}` };
+      if (action.id === 'course') return { ...action, route: `/courses/${course.slug || course.id}` };
+      return action;
+    }),
+  };
+}
 
 export default function DashboardPage() {
   const { user } = useAuth();
   const { t } = useLanguage();
   const [isLoading, setIsLoading] = useState(true);
+  const [dashboard, setDashboard] = useState(() => buildDashboardState({
+    ...mockCourse,
+    ...mockProgress,
+    slug: mockCourse.id,
+    progress: mockProgress.overallProgress,
+    completedLessons: mockProgress.completedLessons,
+    continueRoute: `/courses/${mockCourse.id}/phase/${mockProgress.currentPhase}`,
+  }));
   const displayName = user?.name === 'Student' ? t('common.student') : user?.name || t('common.student');
 
   useEffect(() => {
-    // Simulate data fetching
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 600);
-    return () => clearTimeout(timer);
+    let mounted = true;
+
+    async function loadDashboard() {
+      try {
+        const liveCourse = await fetchStudentCourseExperience('cybersecurity-fundamentals');
+        if (mounted) setDashboard(buildDashboardState(liveCourse));
+      } catch {
+        if (mounted) {
+          setDashboard({
+            course: mockCourse,
+            progress: mockProgress,
+            recentActivity: mockRecentActivity,
+            quickActions: mockQuickActions.map(action => 
+              action.id === 'continue' 
+                ? { ...action, route: `/courses/${mockCourse.id}/phase/${mockProgress.currentPhase}` }
+                : action
+            ),
+          });
+        }
+      } finally {
+        if (mounted) setIsLoading(false);
+      }
+    }
+
+    loadDashboard();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   return (
@@ -94,30 +163,27 @@ export default function DashboardPage() {
         </div>
       )}
 
-      <StatCards progress={mockProgress} />
+      <StatCards progress={dashboard.progress} />
 
       <ProgressBar
         title={t('dashboard.courseProgress')}
-        progress={mockProgress.overallProgress}
+        progress={dashboard.progress.overallProgress}
       />
 
       {/* Two-column layout: Course + Quick Actions | Phase + Activity */}
       <div className="dashboard__grid">
         <div className="dashboard__main">
           <CourseCard
-            course={mockCourse}
-            currentPhaseTitle={mockProgress.currentPhaseTitle}
+            course={dashboard.course}
+            currentPhaseTitle={dashboard.progress.currentPhaseTitle}
+            continueRoute={dashboard.course.continueRoute}
           />
-          <QuickActions actions={mockQuickActions.map(action => 
-            action.id === 'continue' 
-              ? { ...action, route: `/courses/${mockCourse.id}/phase/${mockProgress.currentPhase}` }
-              : action
-          )} />
+          <QuickActions actions={dashboard.quickActions} />
         </div>
 
         <div className="dashboard__sidebar">
-          <CurrentPhaseCard progress={mockProgress} />
-          <RecentActivity activities={mockRecentActivity} />
+          <CurrentPhaseCard progress={dashboard.progress} courseSlug={dashboard.course.slug || dashboard.course.id} />
+          <RecentActivity activities={dashboard.recentActivity} />
         </div>
       </div>
       </>

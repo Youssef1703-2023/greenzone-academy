@@ -3,7 +3,7 @@ import { Shield, ArrowLeft, ArrowRight, Layers, BookOpen, ClipboardCheck } from 
 import { useLanguage } from '../../context/LanguageContext';
 import './CourseCard.css';
 
-export default function CourseCard({ course, currentPhaseTitle }) {
+export default function CourseCard({ course, currentPhaseTitle, continueRoute }) {
   const { language, t } = useLanguage();
   const ArrowIcon = language === 'ar' ? ArrowLeft : ArrowRight;
 
@@ -43,7 +43,7 @@ export default function CourseCard({ course, currentPhaseTitle }) {
           <span className="course-card__current-value" dir="auto">{currentPhaseTitle}</span>
         </div>
 
-        <Link to="/courses/cybersecurity-fundamentals" className="btn btn-primary course-card__btn">
+        <Link to={continueRoute || `/courses/${course.id || course.slug || 'cybersecurity-fundamentals'}`} className="btn btn-primary course-card__btn">
           {t('dashboard.continueCourse')}
           <ArrowIcon size={18} />
         </Link>

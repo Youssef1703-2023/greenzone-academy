@@ -3,7 +3,7 @@ import { Shield, Layers, BookOpen, ClipboardCheck, Award, ArrowLeft, ArrowRight 
 import { useLanguage } from '../../context/LanguageContext';
 import './CourseHeader.css';
 
-export default function CourseHeader({ course }) {
+export default function CourseHeader({ course, continueRoute }) {
   const { language, t } = useLanguage();
   const ArrowIcon = language === 'ar' ? ArrowLeft : ArrowRight;
 
@@ -65,7 +65,7 @@ export default function CourseHeader({ course }) {
           </div>
         </div>
 
-        <Link to={`/courses/${course.slug}/phase/1`} className="btn btn-primary course-header__btn">
+        <Link to={continueRoute || `/courses/${course.slug}/phase/1`} className="btn btn-primary course-header__btn">
           {t('coursePage.continueCourse')}
           <ArrowIcon size={18} />
         </Link>
