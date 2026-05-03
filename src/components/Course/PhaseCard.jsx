@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import {
-  Layers, BookOpen, ClipboardCheck, Lock,
+  BookOpen, ClipboardCheck, Lock,
   ArrowLeft, ArrowRight, CheckCircle2, Clock,
 } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';

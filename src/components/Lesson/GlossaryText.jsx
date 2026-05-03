@@ -9,7 +9,7 @@ function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-const glossaryRegex = new RegExp(`(${aliasEntries.map(({ alias }) => escapeRegExp(alias)).join('|')})`, 'giu');
+const glossaryPattern = `(${aliasEntries.map(({ alias }) => escapeRegExp(alias)).join('|')})`;
 
 function findEntry(value) {
   const normalized = value.toLowerCase();
@@ -31,7 +31,7 @@ export default function GlossaryText({ text, className = '' }) {
 
   const parts = useMemo(() => {
     if (!text || typeof text !== 'string') return [text];
-    glossaryRegex.lastIndex = 0;
+    const glossaryRegex = new RegExp(glossaryPattern, 'giu');
     const output = [];
     let lastIndex = 0;
     let match;

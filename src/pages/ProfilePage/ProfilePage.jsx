@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import StudentLayout from '../../components/StudentLayout/StudentLayout';
 import ProfileOverview from '../../components/Profile/ProfileOverview';
 import EditProfileForm from '../../components/Profile/EditProfileForm';
@@ -9,14 +9,14 @@ import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { getCourseData } from '../../data/coursePageData';
 import { getPhaseData } from '../../data/phaseData';
+import { buildAchievements } from '../../services/achievementService';
 import './ProfilePage.css';
 
 export default function ProfilePage() {
   const { user } = useAuth();
   const { t } = useLanguage();
-  const [summaryData, setSummaryData] = useState(null);
 
-  useEffect(() => {
+  const summaryData = useMemo(() => {
     const course = getCourseData('cybersecurity-fundamentals');
     
     // Calculate stats dynamically
@@ -26,9 +26,6 @@ export default function ProfilePage() {
     let totalQuizScore = 0;
     let currentPhaseId = 1;
     let hasPassedQuiz = false;
-    let phase1LessonsCompleted = 0;
-    let phase1LessonsCount = 7;
-    let phase1Completed = false;
     
     course.phases.forEach(p => {
       const realPhaseData = getPhaseData(p.id);
@@ -59,19 +56,12 @@ export default function ProfilePage() {
         }
       }
       
-      if (p.id === 1) {
-        phase1LessonsCompleted = mergedPhase.completedLessons;
-        phase1LessonsCount = p.lessonsCount || p.totalLessons || 7;
-        if (mergedPhase.quizScore >= 70 || mergedPhase.quizPassed) {
-          phase1Completed = true;
-        }
-      }
     });
 
     const quizAverage = totalQuizzesTaken > 0 ? Math.round(totalQuizScore / totalQuizzesTaken) : 0;
     const overallProgress = Math.round((completedLessons / course.totalLessons) * 100);
 
-    const data = {
+    return {
       courseTitle: course.title,
       overallProgress,
       completedLessons,
@@ -80,15 +70,15 @@ export default function ProfilePage() {
       totalPhases: course.totalPhases,
       quizAverage,
       currentPhaseId: currentPhaseId > course.totalPhases ? course.totalPhases : currentPhaseId,
-      achievements: [
-        { titleKey: "progressPage.firstPhaseCompleted", title: "First Phase Completed", unlocked: phase1Completed },
-        { titleKey: "progressPage.quizPassed", title: "Quiz Passed", unlocked: hasPassedQuiz },
-        { titleKey: "progressPage.sevenLessonsCompleted", title: "7 Lessons Completed", unlocked: phase1LessonsCompleted >= phase1LessonsCount },
-        { titleKey: "progressPage.learningStreakStarted", title: "Learning Streak Started", unlocked: true }
-      ]
+      achievements: buildAchievements({
+        completedLessons,
+        completedPhases,
+        quizPassed: hasPassedQuiz,
+        quizAverage,
+        overallProgress,
+        streak: completedLessons > 0 ? 1 : 0,
+      }),
     };
-
-    setSummaryData(data);
   }, []);
 
   return (

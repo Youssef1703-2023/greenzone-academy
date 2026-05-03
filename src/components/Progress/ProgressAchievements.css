@@ -8,16 +8,48 @@
   overflow: hidden;
 }
 
+.progress-achievements__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.progress-achievements__top strong {
+  flex-shrink: 0;
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 255, 136, 0.22);
+  color: var(--accent);
+  background: rgba(0, 255, 136, 0.08);
+  font-weight: 900;
+}
+
+.progress-achievements__eyebrow {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
 .progress-achievements__header {
   font-size: 1.15rem;
   font-weight: 800;
-  margin-bottom: 20px;
+  margin: 0;
   color: var(--text-primary);
 }
 
 .progress-achievements__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 16px;
   max-width: 100%;
 }
@@ -25,8 +57,8 @@
 .achievement-card {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
+  align-items: flex-start;
+  text-align: start;
   padding: 24px 16px;
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.02);
@@ -57,6 +89,32 @@
   margin-bottom: 6px;
   line-height: 1.4;
   overflow-wrap: anywhere;
+}
+
+.achievement-card__description {
+  min-height: 42px;
+  margin: 0 0 14px;
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.achievement-card__progress {
+  width: 100%;
+  height: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  margin-top: auto;
+  margin-bottom: 10px;
+}
+
+.achievement-card__progress span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent), #60a5fa);
+  box-shadow: 0 0 12px rgba(0, 255, 136, 0.18);
 }
 
 .achievement-card__status {
@@ -101,12 +159,16 @@
     border-radius: 14px;
   }
 
+  .progress-achievements__top {
+    margin-bottom: 16px;
+  }
+
   .progress-achievements__header {
     font-size: 1rem;
   }
 
   .progress-achievements__grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: 1fr;
     gap: 12px;
   }
 

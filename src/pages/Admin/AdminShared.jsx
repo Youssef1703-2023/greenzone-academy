@@ -37,6 +37,22 @@ export function AdminErrorState({ message }) {
   return <div className="admin-empty-state admin-empty-state--error">{message || t('admin.backendUnavailable')}</div>;
 }
 
+export function AdminLoadingSkeleton({ rows = 4 }) {
+  return (
+    <div className="admin-skeleton" role="status" aria-live="polite">
+      <div className="admin-skeleton__header">
+        <span></span>
+        <span></span>
+      </div>
+      <div className="admin-skeleton__grid">
+        {Array.from({ length: rows }).map((_, index) => (
+          <span key={index}></span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function useAdminData(loader, initialValue = []) {
   const [data, setData] = useState(initialValue);
   const [loading, setLoading] = useState(true);

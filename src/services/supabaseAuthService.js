@@ -1,4 +1,5 @@
 import { requireSupabase, supabase } from './supabaseClient';
+import { cachedQuery, clearQueryCache } from './queryCache';
 
 const FALLBACK_STORAGE_KEY = 'greenzone_user_fallback';
 
@@ -50,9 +51,13 @@ async function withTimeout(promise, message, timeoutMs = 8000) {
 export async function getCurrentSession() {
   if (!supabase) return { session: null, user: null, profile: null };
 
-  const { data, error } = await withTimeout(
-    supabase.auth.getSession(),
-    'Session check timed out. Please refresh and try again.'
+  const { data, error } = await cachedQuery(
+    'auth:session',
+    () => withTimeout(
+      supabase.auth.getSession(),
+      'Session check timed out. Please refresh and try again.'
+    ),
+    { ttl: 20_000 },
   );
   if (error) throw error;
 
@@ -71,11 +76,15 @@ export async function getCurrentSession() {
 
 export async function getProfile(userId, authUser = null) {
   const client = requireSupabase();
-  const { data, error } = await client
-    .from('profiles')
-    .select('id,full_name,email,role,status')
-    .eq('id', userId)
-    .maybeSingle();
+  const { data, error } = await cachedQuery(
+    ['auth:profile', userId],
+    () => client
+      .from('profiles')
+      .select('id,full_name,email,role,status')
+      .eq('id', userId)
+      .maybeSingle(),
+    { ttl: 45_000 },
+  );
 
   if (error) throw error;
   if (data) return data;
@@ -103,6 +112,7 @@ export async function getProfile(userId, authUser = null) {
 export async function signIn(email, password) {
   const client = requireSupabase();
   try {
+    clearQueryCache('auth:');
     const { data, error } = await withTimeout(
       client.auth.signInWithPassword({ email, password }),
       'Login request timed out. Please try again.',
@@ -139,6 +149,7 @@ export async function signIn(email, password) {
 
 export async function signUp(fullName, email, password) {
   const client = requireSupabase();
+  clearQueryCache('auth:');
   const { data, error } = await withTimeout(
     client.auth.signUp({
       email,
@@ -178,6 +189,7 @@ export async function signUp(fullName, email, password) {
 
 export async function signOut() {
   if (!supabase) return;
+  clearQueryCache();
   await supabase.auth.signOut();
 }
 
@@ -191,5 +203,6 @@ export async function updateProfile(userId, { name, email }) {
     .single();
 
   if (error) return { success: false, error: error.message };
+  clearQueryCache('auth:profile');
   return { success: true, user: normalizeProfile(data) };
 }

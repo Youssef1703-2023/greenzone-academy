@@ -8,6 +8,7 @@ import {
   signUp,
   updateProfile,
 } from '../services/supabaseAuthService';
+import { clearQueryCache } from '../services/queryCache';
 
 const AuthContext = createContext(null);
 
@@ -67,6 +68,7 @@ export function AuthProvider({ children }) {
     };
 
     const { data } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      clearQueryCache('auth:');
       if (!session?.user) {
         setUser(null);
         writeFallbackUser(null);

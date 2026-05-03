@@ -1,4 +1,5 @@
 import { fetchBackendAdminOverview, getScores } from './adminDataService';
+import { cachedQuery, clearQueryCache } from './queryCache';
 
 const unavailable = null;
 
@@ -8,23 +9,28 @@ function average(values) {
 }
 
 export async function getAdminOverviewStats() {
-  return fetchBackendAdminOverview();
+  return cachedQuery('admin:overview', fetchBackendAdminOverview, { ttl: 30_000 });
+}
+
+export function refreshAdminOverviewStats() {
+  clearQueryCache('admin:overview');
+  return getAdminOverviewStats();
 }
 
 export async function getContentStats() {
-  return (await fetchBackendAdminOverview()).content;
+  return (await getAdminOverviewStats()).content;
 }
 
 export async function getStudentStats() {
-  return (await fetchBackendAdminOverview()).students;
+  return (await getAdminOverviewStats()).students;
 }
 
 export async function getProgressStats() {
-  return (await fetchBackendAdminOverview()).progress;
+  return (await getAdminOverviewStats()).progress;
 }
 
 export async function getQuizStats() {
-  return (await fetchBackendAdminOverview()).quizzes;
+  return (await getAdminOverviewStats()).quizzes;
 }
 
 export function getQuizStatsFromRows(scores) {

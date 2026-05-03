@@ -37,6 +37,7 @@ const AdminSettingsPage = lazy(() => import('./pages/Admin/AdminSettingsPage'));
 
 function ScrollAnimationObserver() {
   useEffect(() => {
+    const observed = new WeakSet();
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -48,10 +49,36 @@ function ScrollAnimationObserver() {
       { threshold: 0.15, rootMargin: '0px 0px -40px 0px' }
     );
 
-    const elements = document.querySelectorAll('.animate-on-scroll');
-    elements.forEach((el) => observer.observe(el));
+    const observeAnimatedElements = (root = document) => {
+      const elements = root.querySelectorAll?.('.animate-on-scroll') || [];
+      elements.forEach((el) => {
+        if (observed.has(el)) return;
+        observed.add(el);
+        observer.observe(el);
+      });
+    };
 
-    return () => observer.disconnect();
+    observeAnimatedElements();
+
+    const mutationObserver = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        mutation.addedNodes.forEach((node) => {
+          if (!(node instanceof Element)) return;
+          if (node.matches('.animate-on-scroll') && !observed.has(node)) {
+            observed.add(node);
+            observer.observe(node);
+          }
+          observeAnimatedElements(node);
+        });
+      });
+    });
+
+    mutationObserver.observe(document.body, { childList: true, subtree: true });
+
+    return () => {
+      observer.disconnect();
+      mutationObserver.disconnect();
+    };
   }, []);
 
   return null;
@@ -60,10 +87,23 @@ function ScrollAnimationObserver() {
 function RouteLoader() {
   return (
     <div className="route-loader" role="status" aria-live="polite">
-      <div className="route-loader__mark"></div>
-      <div>
-        <p className="route-loader__eyebrow">Green Zone Academy</p>
-        <p className="route-loader__text">Loading workspace...</p>
+      <div className="route-loader__shell">
+        <div className="route-loader__brand">
+          <div className="route-loader__mark"></div>
+          <div>
+            <p className="route-loader__eyebrow">Green Zone Academy</p>
+            <p className="route-loader__text">Preparing your learning space</p>
+          </div>
+        </div>
+        <div className="route-loader__skeleton">
+          <span className="route-loader__line route-loader__line--wide"></span>
+          <span className="route-loader__line"></span>
+          <div className="route-loader__cards">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
       </div>
     </div>
   );

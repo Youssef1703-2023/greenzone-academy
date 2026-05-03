@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
   Shield, LayoutDashboard, BookOpen, BarChart3,
@@ -41,11 +41,6 @@ export default function StudentLayout({ children }) {
     navigate('/');
   };
 
-  // Close mobile menu on route change
-  useEffect(() => {
-    setIsMobileMenuOpen(false);
-  }, [location.pathname]);
-
   return (
     <div className="student-layout">
       {/* ── Top Navbar ── */}
@@ -68,6 +63,7 @@ export default function StudentLayout({ children }) {
                 <NavLink
                   key={link.to}
                   to={link.to}
+                  onClick={() => setIsMobileMenuOpen(false)}
                   className={({ isActive }) =>
                     `student-nav__link ${isActive ? 'student-nav__link--active' : ''}`
                   }
@@ -80,6 +76,7 @@ export default function StudentLayout({ children }) {
             {user?.role === 'admin' && (
               <NavLink
                 to="/admin"
+                onClick={() => setIsMobileMenuOpen(false)}
                 className={({ isActive }) =>
                   `student-nav__link ${isActive ? 'student-nav__link--active' : ''}`
                 }
@@ -165,7 +162,10 @@ export default function StudentLayout({ children }) {
                 {t('common.adminPanel')}
               </NavLink>
             )}
-            <button className="student-nav__mobile-logout" onClick={() => setIsSettingsOpen(true)}>
+            <button className="student-nav__mobile-logout" onClick={() => {
+              setIsMobileMenuOpen(false);
+              setIsSettingsOpen(true);
+            }}>
               <Settings size={18} />
               {t('common.settings')}
             </button>

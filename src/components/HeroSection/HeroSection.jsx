@@ -18,18 +18,22 @@ export default function HeroSection() {
 
   useEffect(() => {
     const currentText = TYPING_TEXTS[textIndex];
-    let typingSpeed = isDeleting ? 40 : 100;
-
-    if (!isDeleting && typedText === currentText) {
-      typingSpeed = 2000; // Pause at end
-      setIsDeleting(true);
-    } else if (isDeleting && typedText === '') {
-      setIsDeleting(false);
-      setTextIndex((prev) => (prev + 1) % TYPING_TEXTS.length);
-      typingSpeed = 500; // Pause before typing new word
-    }
+    const isAtEnd = !isDeleting && typedText === currentText;
+    const isAtStart = isDeleting && typedText === '';
+    const typingSpeed = isAtEnd ? 2000 : isAtStart ? 500 : isDeleting ? 40 : 100;
 
     const timer = setTimeout(() => {
+      if (isAtEnd) {
+        setIsDeleting(true);
+        return;
+      }
+
+      if (isAtStart) {
+        setIsDeleting(false);
+        setTextIndex((prev) => (prev + 1) % TYPING_TEXTS.length);
+        return;
+      }
+
       setTypedText(
         isDeleting
           ? currentText.substring(0, typedText.length - 1)

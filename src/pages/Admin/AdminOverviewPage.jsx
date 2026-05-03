@@ -7,7 +7,7 @@ import {
 import AdminLayout from '../../components/AdminLayout/AdminLayout';
 import { useLanguage } from '../../context/LanguageContext';
 import { getAdminOverviewStats } from '../../services/adminStatsService';
-import { formatAdminValue, AdminErrorState, AdminPageHeader } from './AdminShared';
+import { formatAdminValue, AdminErrorState, AdminLoadingSkeleton, AdminPageHeader } from './AdminShared';
 import './AdminPages.css';
 
 const groups = [
@@ -104,7 +104,7 @@ export default function AdminOverviewPage() {
           )}
         />
 
-        {loading && <div className="admin-loading">{t('admin.loading')}</div>}
+        {loading && <AdminLoadingSkeleton rows={8} />}
         {error && <AdminErrorState message={error} />}
 
         <section className="admin-overview-groups">

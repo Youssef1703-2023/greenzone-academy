@@ -1,8 +1,9 @@
 import { requireSupabase, supabase } from './supabaseClient';
+import { cachedQuery, clearQueryCache } from './queryCache';
 
 export async function getCurrentAuthUserId() {
   if (!supabase) return null;
-  const { data } = await supabase.auth.getUser();
+  const { data } = await cachedQuery('student:auth-user', () => supabase.auth.getUser(), { ttl: 20_000 });
   return data.user?.id || null;
 }
 
@@ -162,92 +163,94 @@ export async function fetchStudentCourseExperience(courseSlug = 'cybersecurity-f
   const client = requireSupabase();
   const userId = await getCurrentAuthUserId();
 
-  const { data: course, error: courseError } = await client
-    .from('courses')
-    .select('id,slug,title,description,difficulty,status')
-    .eq('slug', courseSlug)
-    .eq('status', 'published')
-    .maybeSingle();
-
-  if (courseError) throw courseError;
-  if (!course) throw new Error('Course not found.');
-
-  const [phasesResult, lessonsResult, quizzesResult, progressResult, attemptsResult] = await Promise.all([
-    client
-      .from('phases')
-      .select('id,phase_number,title,description,status')
-      .eq('course_id', course.id)
+  return cachedQuery(['student:course', userId || 'guest', courseSlug], async () => {
+    const { data: course, error: courseError } = await client
+      .from('courses')
+      .select('id,slug,title,description,difficulty,status')
+      .eq('slug', courseSlug)
       .eq('status', 'published')
-      .order('phase_number'),
-    client
-      .from('lessons')
-      .select('id,phase_id,lesson_number,slug,title,reading_time,status')
-      .eq('course_id', course.id)
-      .eq('status', 'published')
-      .order('lesson_number'),
-    client
-      .from('quizzes')
-      .select('id,phase_id,status')
-      .eq('course_id', course.id)
-      .eq('status', 'published'),
-    userId
-      ? client
-        .from('student_progress')
-        .select('lesson_id,status,updated_at,completed_at')
-        .eq('user_id', userId)
-      : Promise.resolve({ data: [], error: null }),
-    userId
-      ? client
-        .from('quiz_attempts')
-        .select('score,passed,created_at,quizzes(phase_id)')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-      : Promise.resolve({ data: [], error: null }),
-  ]);
+      .maybeSingle();
 
-  if (phasesResult.error) throw phasesResult.error;
-  if (lessonsResult.error) throw lessonsResult.error;
-  if (quizzesResult.error) throw quizzesResult.error;
-  if (progressResult.error) throw progressResult.error;
-  if (attemptsResult.error) throw attemptsResult.error;
+    if (courseError) throw courseError;
+    if (!course) throw new Error('Course not found.');
 
-  const phases = buildPhaseMap(
-    phasesResult.data || [],
-    lessonsResult.data || [],
-    progressResult.data || [],
-    quizzesResult.data || [],
-    attemptsResult.data || [],
-    course,
-  );
-  const completedLessons = phases.reduce((sum, phase) => sum + phase.completedLessons, 0);
-  const totalLessons = phases.reduce((sum, phase) => sum + phase.totalLessons, 0);
-  const activePhase = phases.find((phase) => !phase.locked && phase.status !== 'completed') || phases[0];
-  const latestQuizScore = attemptsResult.data?.[0]?.score ?? null;
+    const [phasesResult, lessonsResult, quizzesResult, progressResult, attemptsResult] = await Promise.all([
+      client
+        .from('phases')
+        .select('id,phase_number,title,description,status')
+        .eq('course_id', course.id)
+        .eq('status', 'published')
+        .order('phase_number'),
+      client
+        .from('lessons')
+        .select('id,phase_id,lesson_number,slug,title,reading_time,status')
+        .eq('course_id', course.id)
+        .eq('status', 'published')
+        .order('lesson_number'),
+      client
+        .from('quizzes')
+        .select('id,phase_id,status')
+        .eq('course_id', course.id)
+        .eq('status', 'published'),
+      userId
+        ? client
+          .from('student_progress')
+          .select('lesson_id,status,updated_at,completed_at')
+          .eq('user_id', userId)
+        : Promise.resolve({ data: [], error: null }),
+      userId
+        ? client
+          .from('quiz_attempts')
+          .select('score,passed,created_at,quizzes(phase_id)')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false })
+        : Promise.resolve({ data: [], error: null }),
+    ]);
 
-  return {
-    id: course.slug,
-    recordId: course.id,
-    slug: course.slug,
-    title: course.title,
-    description: course.description,
-    difficulty: course.difficulty,
-    totalPhases: phases.length,
-    totalLessons,
-    totalQuizzes: quizzesResult.data?.length || 0,
-    hasFinalExam: true,
-    progress: totalLessons ? Math.round((completedLessons / totalLessons) * 100) : 0,
-    completedLessons,
-    badges: [course.difficulty || 'Beginner', 'Supabase Live', 'Quiz Based Progress'],
-    phases,
-    continueRoute: pickContinueTarget(course, phases),
-    currentPhase: activePhase?.id || 1,
-    currentPhaseTitle: activePhase?.title || 'Cybersecurity Introduction',
-    currentPhaseLessons: activePhase?.totalLessons || 0,
-    currentPhaseCompletedLessons: activePhase?.completedLessons || 0,
-    currentPhaseStatus: activePhase?.status === 'completed' ? 'Completed' : 'In Progress',
-    latestQuizScore,
-    source: 'supabase',
-  };
+    if (phasesResult.error) throw phasesResult.error;
+    if (lessonsResult.error) throw lessonsResult.error;
+    if (quizzesResult.error) throw quizzesResult.error;
+    if (progressResult.error) throw progressResult.error;
+    if (attemptsResult.error) throw attemptsResult.error;
+
+    const phases = buildPhaseMap(
+      phasesResult.data || [],
+      lessonsResult.data || [],
+      progressResult.data || [],
+      quizzesResult.data || [],
+      attemptsResult.data || [],
+      course,
+    );
+    const completedLessons = phases.reduce((sum, phase) => sum + phase.completedLessons, 0);
+    const totalLessons = phases.reduce((sum, phase) => sum + phase.totalLessons, 0);
+    const activePhase = phases.find((phase) => !phase.locked && phase.status !== 'completed') || phases[0];
+    const latestQuizScore = attemptsResult.data?.[0]?.score ?? null;
+
+    return {
+      id: course.slug,
+      recordId: course.id,
+      slug: course.slug,
+      title: course.title,
+      description: course.description,
+      difficulty: course.difficulty,
+      totalPhases: phases.length,
+      totalLessons,
+      totalQuizzes: quizzesResult.data?.length || 0,
+      hasFinalExam: true,
+      progress: totalLessons ? Math.round((completedLessons / totalLessons) * 100) : 0,
+      completedLessons,
+      badges: [course.difficulty || 'Beginner', 'Supabase Live', 'Quiz Based Progress'],
+      phases,
+      continueRoute: pickContinueTarget(course, phases),
+      currentPhase: activePhase?.id || 1,
+      currentPhaseTitle: activePhase?.title || 'Cybersecurity Introduction',
+      currentPhaseLessons: activePhase?.totalLessons || 0,
+      currentPhaseCompletedLessons: activePhase?.completedLessons || 0,
+      currentPhaseStatus: activePhase?.status === 'completed' ? 'Completed' : 'In Progress',
+      latestQuizScore,
+      source: 'supabase',
+    };
+  }, { ttl: 45_000 });
 }
 
 export async function fetchStudentPhasePlayer({ courseSlug, phaseId }) {
@@ -261,84 +264,86 @@ export async function fetchPhaseQuizExperience({ courseSlug, phaseId }) {
   const client = requireSupabase();
   const userId = await getCurrentAuthUserId();
 
-  const { data: phase, error: phaseError } = await client
-    .from('phases')
-    .select('id,title,phase_number,courses!inner(slug,title)')
-    .eq('courses.slug', courseSlug)
-    .eq('phase_number', Number(phaseId))
-    .maybeSingle();
+  return cachedQuery(['student:quiz', userId || 'guest', courseSlug, phaseId], async () => {
+    const { data: phase, error: phaseError } = await client
+      .from('phases')
+      .select('id,title,phase_number,courses!inner(slug,title)')
+      .eq('courses.slug', courseSlug)
+      .eq('phase_number', Number(phaseId))
+      .maybeSingle();
 
-  if (phaseError) throw phaseError;
-  if (!phase) throw new Error('Phase not found.');
+    if (phaseError) throw phaseError;
+    if (!phase) throw new Error('Phase not found.');
 
-  const [lessonsResult, progressResult, quizResult] = await Promise.all([
-    client
-      .from('lessons')
-      .select('id,title,status')
-      .eq('phase_id', phase.id)
-      .eq('status', 'published'),
-    userId
-      ? client
-        .from('student_progress')
-        .select('lesson_id,status')
-        .eq('user_id', userId)
-      : Promise.resolve({ data: [], error: null }),
-    client
-      .from('quizzes')
-      .select('id,title,passing_score,status,quiz_questions(*),quiz_attempts(score,passed,attempt_number,created_at,selected_answers)')
-      .eq('phase_id', phase.id)
-      .eq('status', 'published')
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-  ]);
+    const [lessonsResult, progressResult, quizResult] = await Promise.all([
+      client
+        .from('lessons')
+        .select('id,title,status')
+        .eq('phase_id', phase.id)
+        .eq('status', 'published'),
+      userId
+        ? client
+          .from('student_progress')
+          .select('lesson_id,status')
+          .eq('user_id', userId)
+        : Promise.resolve({ data: [], error: null }),
+      client
+        .from('quizzes')
+        .select('id,title,passing_score,status,quiz_questions(*),quiz_attempts(score,passed,attempt_number,created_at,selected_answers)')
+        .eq('phase_id', phase.id)
+        .eq('status', 'published')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ]);
 
-  if (lessonsResult.error) throw lessonsResult.error;
-  if (progressResult.error) throw progressResult.error;
-  if (quizResult.error) throw quizResult.error;
-  if (!quizResult.data) throw new Error('No published quiz found for this phase.');
+    if (lessonsResult.error) throw lessonsResult.error;
+    if (progressResult.error) throw progressResult.error;
+    if (quizResult.error) throw quizResult.error;
+    if (!quizResult.data) throw new Error('No published quiz found for this phase.');
 
-  const lessons = lessonsResult.data || [];
-  const completedLessonIds = new Set(
-    (progressResult.data || [])
-      .filter((item) => item.status === 'completed')
-      .map((item) => item.lesson_id),
-  );
-  const completedLessons = lessons.filter((lesson) => completedLessonIds.has(lesson.id)).length;
-  const attempts = (quizResult.data.quiz_attempts || [])
-    .slice()
-    .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
-  const latestAttempt = attempts[0] || null;
-  const quizQuestions = (quizResult.data.quiz_questions || [])
-    .slice()
-    .sort((a, b) => (a.question_number || 0) - (b.question_number || 0))
-    .map(normalizeQuizQuestion);
-  const quizPassed = Boolean(latestAttempt?.passed);
-  const quizUnlocked = lessons.length === 0 || completedLessons >= lessons.length;
+    const lessons = lessonsResult.data || [];
+    const completedLessonIds = new Set(
+      (progressResult.data || [])
+        .filter((item) => item.status === 'completed')
+        .map((item) => item.lesson_id),
+    );
+    const completedLessons = lessons.filter((lesson) => completedLessonIds.has(lesson.id)).length;
+    const attempts = (quizResult.data.quiz_attempts || [])
+      .slice()
+      .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+    const latestAttempt = attempts[0] || null;
+    const quizQuestions = (quizResult.data.quiz_questions || [])
+      .slice()
+      .sort((a, b) => (a.question_number || 0) - (b.question_number || 0))
+      .map(normalizeQuizQuestion);
+    const quizPassed = Boolean(latestAttempt?.passed);
+    const quizUnlocked = lessons.length === 0 || completedLessons >= lessons.length;
 
-  return {
-    id: Number(phase.phase_number),
-    recordId: phase.id,
-    title: phase.title,
-    courseSlug,
-    courseTitle: phase.courses?.title || 'Course',
-    totalLessons: lessons.length,
-    completedLessons,
-    progress: lessons.length ? Math.round((completedLessons / lessons.length) * 100) : 100,
-    quizUnlocked,
-    quizPassed,
-    quizScore: latestAttempt?.score || 0,
-    status: quizPassed ? 'completed' : 'in-progress',
-    source: 'supabase',
-    quiz: {
-      id: quizResult.data.id,
-      title: quizResult.data.title,
-      questionsCount: quizQuestions.length,
-      passingScore: quizResult.data.passing_score,
-      attempts: attempts.length,
-      questions: quizQuestions,
-    },
-  };
+    return {
+      id: Number(phase.phase_number),
+      recordId: phase.id,
+      title: phase.title,
+      courseSlug,
+      courseTitle: phase.courses?.title || 'Course',
+      totalLessons: lessons.length,
+      completedLessons,
+      progress: lessons.length ? Math.round((completedLessons / lessons.length) * 100) : 100,
+      quizUnlocked,
+      quizPassed,
+      quizScore: latestAttempt?.score || 0,
+      status: quizPassed ? 'completed' : 'in-progress',
+      source: 'supabase',
+      quiz: {
+        id: quizResult.data.id,
+        title: quizResult.data.title,
+        questionsCount: quizQuestions.length,
+        passingScore: quizResult.data.passing_score,
+        attempts: attempts.length,
+        questions: quizQuestions,
+      },
+    };
+  }, { ttl: 30_000 });
 }
 
 export async function saveLessonStarted({ courseSlug, phaseId, lessonId }) {
@@ -366,6 +371,7 @@ export async function saveLessonStarted({ courseSlug, phaseId, lessonId }) {
   }, { onConflict: 'user_id,lesson_id' });
 
   if (error) throw error;
+  clearQueryCache('student:');
   return { ok: true };
 }
 
@@ -385,6 +391,7 @@ export async function saveLessonCompletion({ courseSlug, phaseId, lessonId }) {
   }, { onConflict: 'user_id,lesson_id' });
 
   if (error) throw error;
+  clearQueryCache('student:');
   return { ok: true };
 }
 
@@ -450,5 +457,6 @@ export async function saveQuizAttempt({ courseSlug, phaseId, score, passed, sele
   });
 
   if (error) throw error;
+  clearQueryCache('student:');
   return { ok: true };
 }

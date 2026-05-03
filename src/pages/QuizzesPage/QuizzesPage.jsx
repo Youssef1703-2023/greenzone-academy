@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import StudentLayout from '../../components/StudentLayout/StudentLayout';
 import QuizSummaryCards from '../../components/Quizzes/QuizSummaryCards';
 import NextAvailableQuiz from '../../components/Quizzes/NextAvailableQuiz';
@@ -10,10 +10,9 @@ import { useLanguage } from '../../context/LanguageContext';
 import './QuizzesPage.css';
 
 export default function QuizzesPage() {
-  const [quizzesData, setQuizzesData] = useState(null);
   const { t } = useLanguage();
 
-  useEffect(() => {
+  const quizzesData = useMemo(() => {
     const course = getCourseData('cybersecurity-fundamentals');
     
     // Enrich phases with actual local storage tracking
@@ -34,27 +33,16 @@ export default function QuizzesPage() {
       };
     });
 
-    // Compute quiz list formatting
-    let passedCount = 0;
-    let totalAttemptedQuizzes = 0;
-    let totalAttemptedScore = 0;
-    
     const quizzesList = enrichedPhases.map(p => {
       let qStatus = 'locked';
       if (p.quizPassed) {
         qStatus = 'passed';
-        passedCount++;
       } else if (p.quizUnlocked || p.completedLessons >= (p.lessonsCount || p.totalLessons)) {
         if (p.quizScore !== undefined && p.quizScore !== null) {
           qStatus = 'failed';
         } else {
           qStatus = 'ready';
         }
-      }
-
-      if (p.quizScore !== undefined && p.quizScore !== null) {
-        totalAttemptedQuizzes++;
-        totalAttemptedScore += p.quizScore;
       }
 
       let requiredRule = `Complete Phase ${p.id} lessons`;
@@ -75,22 +63,23 @@ export default function QuizzesPage() {
         requiredRule
       };
     });
+    const passedCount = quizzesList.filter((quiz) => quiz.status === 'passed').length;
+    const attemptedQuizzes = quizzesList.filter((quiz) => quiz.score !== null);
+    const totalAttemptedScore = attemptedQuizzes.reduce((sum, quiz) => sum + quiz.score, 0);
 
     // Find next available quiz
     const nextQuiz = quizzesList.find(q => q.status === 'ready' || q.status === 'failed');
     const nextPhase = enrichedPhases.find(p => p.status === 'in-progress' || p.status === 'locked');
 
-    const data = {
+    return {
       totalQuizzes: 8,
       passedQuizzes: passedCount,
-      averageScore: totalAttemptedQuizzes > 0 ? Math.round(totalAttemptedScore / totalAttemptedQuizzes) : 0,
+      averageScore: attemptedQuizzes.length > 0 ? Math.round(totalAttemptedScore / attemptedQuizzes.length) : 0,
       finalExamStatus: passedCount === 8 ? 'Ready' : 'Locked',
       quizzes: quizzesList,
       nextQuiz,
       nextPhase
     };
-
-    setQuizzesData(data);
   }, []);
 
   if (!quizzesData) return null;

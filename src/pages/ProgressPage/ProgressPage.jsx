@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import StudentLayout from '../../components/StudentLayout/StudentLayout';
 import OverallProgressCard from '../../components/Progress/OverallProgressCard';
 import ProgressStats from '../../components/Progress/ProgressStats';
@@ -10,6 +10,7 @@ import ResetProgress from '../../components/Progress/ResetProgress';
 import { getCourseData } from '../../data/coursePageData';
 import { getPhaseData } from '../../data/phaseData';
 import { useLanguage } from '../../context/LanguageContext';
+import { buildAchievements } from '../../services/achievementService';
 import './ProgressPage.css';
 
 function getNextStep(course, phases) {
@@ -65,18 +66,11 @@ function getNextStep(course, phases) {
 }
 
 export default function ProgressPage() {
-  const [progressData, setProgressData] = useState(null);
   const { t } = useLanguage();
 
-  useEffect(() => {
+  const progressData = useMemo(() => {
     // Attempt to build progress from localStorage mock data to reflect user flow
     const course = getCourseData('cybersecurity-fundamentals');
-    
-    // Calculate stats dynamically
-    let completedLessons = 0;
-    let completedPhases = 0;
-    let totalQuizzesTaken = 0;
-    let totalQuizScore = 0;
     
     const enrichedPhases = course.phases.map(p => {
       // Pull real-time phase data from localStorage to sync with LessonPage
@@ -92,27 +86,23 @@ export default function ProgressPage() {
         quizUnlocked: realPhaseData.quizUnlocked
       } : p;
 
-      completedLessons += mergedPhase.completedLessons;
-      
-      if (mergedPhase.status === 'completed') {
-        completedPhases++;
-      }
-      
-      if (mergedPhase.quizPassed) {
-        totalQuizzesTaken++;
-        totalQuizScore += mergedPhase.quizScore || 100;
-      }
-      
       return mergedPhase;
     });
+
+    const completedLessons = enrichedPhases.reduce((sum, phase) => sum + (phase.completedLessons || 0), 0);
+    const completedPhases = enrichedPhases.filter((phase) => phase.status === 'completed').length;
+    const passedQuizzes = enrichedPhases.filter((phase) => phase.quizPassed);
+    const totalQuizzesTaken = passedQuizzes.length;
+    const totalQuizScore = passedQuizzes.reduce((sum, phase) => sum + (phase.quizScore || 100), 0);
 
     const quizPassed = totalQuizzesTaken > 0;
     const quizAverage = totalQuizzesTaken > 0 ? Math.round(totalQuizScore / totalQuizzesTaken) : 0;
     const overallProgress = Math.round((completedLessons / course.totalLessons) * 100);
     const nextStep = getNextStep(course, enrichedPhases);
     const lessonsRemaining = Math.max(course.totalLessons - completedLessons, 0);
+    const streak = completedLessons > 0 ? 1 : 0;
 
-    const data = {
+    return {
       courseTitle: course.title,
       courseSlug: course.slug,
       overallProgress,
@@ -122,18 +112,18 @@ export default function ProgressPage() {
       totalPhases: course.totalPhases,
       quizAverage,
       lessonsRemaining,
-      streak: completedLessons > 0 ? 1 : 0,
+      streak,
       nextStep,
       phases: enrichedPhases,
-      achievements: [
-        { titleKey: "progressPage.firstPhaseCompleted", title: "First Phase Completed", unlocked: completedPhases > 0 },
-        { titleKey: "progressPage.quizPassed", title: "Quiz Passed", unlocked: quizPassed },
-        { titleKey: "progressPage.sevenLessonsCompleted", title: "7 Lessons Completed", unlocked: completedLessons >= 7 },
-        { titleKey: "progressPage.learningStreakStarted", title: "Learning Streak Started", unlocked: true }
-      ]
+      achievements: buildAchievements({
+        completedLessons,
+        completedPhases,
+        quizPassed,
+        quizAverage,
+        overallProgress,
+        streak,
+      }),
     };
-
-    setProgressData(data);
   }, []);
 
   if (!progressData) return null;

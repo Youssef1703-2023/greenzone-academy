@@ -377,19 +377,48 @@
 /* Loading screen */
 .loading-screen {
   min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: var(--bg-primary);
+}
+
+.loading-screen__card {
+  width: min(420px, 100%);
   display: flex;
   align-items: center;
-  justify-content: center;
-  background: var(--bg-primary);
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid rgba(0, 255, 136, 0.18);
+  border-radius: 16px;
+  background: linear-gradient(145deg, rgba(17, 24, 39, 0.88), rgba(3, 7, 18, 0.9));
+  box-shadow: 0 20px 70px rgba(0, 0, 0, 0.3);
 }
 
 .loading-screen__spinner {
   width: 40px;
   height: 40px;
+  flex-shrink: 0;
   border: 3px solid rgba(0, 255, 136, 0.15);
   border-top-color: var(--accent);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
+}
+
+.loading-screen__copy {
+  display: grid;
+  gap: 4px;
+}
+
+.loading-screen__copy strong {
+  color: var(--text-primary);
+  font-weight: 900;
+}
+
+.loading-screen__copy span {
+  color: var(--text-secondary);
+  font-size: 0.86rem;
+  line-height: 1.45;
 }
 
 @keyframes spin {
