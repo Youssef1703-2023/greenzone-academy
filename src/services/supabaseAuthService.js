@@ -59,7 +59,7 @@ export async function getCurrentSession() {
   const authUser = data.session?.user || null;
   if (!authUser) return { session: data.session, user: null, profile: null };
 
-  let profile = null;
+  let profile;
   try {
     profile = await getProfile(authUser.id, authUser);
   } catch {

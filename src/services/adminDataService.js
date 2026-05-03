@@ -33,6 +33,49 @@ function average(values) {
   return Math.round(usable.reduce((sum, value) => sum + value, 0) / usable.length);
 }
 
+function normalizeQuestion(question, index) {
+  const options = Array.isArray(question.options_json)
+    ? question.options_json
+    : Array.isArray(question.options)
+      ? question.options
+      : ['Option A', 'Option B', 'Option C', 'Option D'];
+
+  return {
+    id: question.id,
+    questionNumber: question.question_number || index + 1,
+    prompt: question.prompt || question.text || '',
+    text: question.prompt || question.text || '',
+    options,
+    correctAnswerIndex: Number(question.correct_answer_index ?? question.correctAnswerIndex ?? 0),
+  };
+}
+
+function mapQuiz(quiz) {
+  const scores = quiz.quiz_attempts?.map((attempt) => attempt.score) || [];
+  const passed = quiz.quiz_attempts?.filter((attempt) => attempt.passed).length || 0;
+  const questions = (quiz.quiz_questions || [])
+    .slice()
+    .sort((a, b) => (a.question_number || 0) - (b.question_number || 0))
+    .map(normalizeQuestion);
+
+  return {
+    id: quiz.id,
+    title: quiz.title,
+    slug: quiz.slug,
+    phaseId: quiz.phases?.phase_number,
+    phaseRecordId: quiz.phase_id,
+    phaseTitle: quiz.phases?.title,
+    questions,
+    questionsCount: questions.length,
+    passingScore: quiz.passing_score,
+    attempts: quiz.quiz_attempts?.length || 0,
+    averageScore: average(scores),
+    passRate: quiz.quiz_attempts?.length ? Math.round((passed / quiz.quiz_attempts.length) * 100) : unavailable,
+    status: fromStatus(quiz.status),
+    updatedAt: quiz.updated_at,
+  };
+}
+
 function slugify(value) {
   return String(value || '')
     .toLowerCase()
@@ -238,27 +281,10 @@ export async function getQuizzes() {
   const client = requireSupabase();
   const quizzes = await safeQuery(client
     .from('quizzes')
-    .select('*, phases(id,title,phase_number), quiz_questions(id), quiz_attempts(score,passed)')
+    .select('*, phases(id,title,phase_number), quiz_questions(*), quiz_attempts(score,passed)')
     .order('created_at'));
 
-  return quizzes.map((quiz) => {
-    const scores = quiz.quiz_attempts?.map((attempt) => attempt.score) || [];
-    const passed = quiz.quiz_attempts?.filter((attempt) => attempt.passed).length || 0;
-    return {
-      id: quiz.id,
-      title: quiz.title,
-      slug: quiz.slug,
-      phaseId: quiz.phases?.phase_number,
-      phaseRecordId: quiz.phase_id,
-      phaseTitle: quiz.phases?.title,
-      questionsCount: quiz.quiz_questions?.length || 0,
-      passingScore: quiz.passing_score,
-      attempts: quiz.quiz_attempts?.length || 0,
-      averageScore: average(scores),
-      passRate: quiz.quiz_attempts?.length ? Math.round((passed / quiz.quiz_attempts.length) * 100) : unavailable,
-      status: fromStatus(quiz.status),
-    };
-  });
+  return quizzes.map(mapQuiz);
 }
 
 export async function saveQuiz(record) {
@@ -280,6 +306,25 @@ export async function saveQuiz(record) {
     : client.from('quizzes').insert(payload).select('*').single();
   const { data, error } = await query;
   if (error) throw new Error(error.message);
+
+  if (Array.isArray(record.questions)) {
+    const normalizedQuestions = record.questions.map((question, index) => ({
+      quiz_id: data.id,
+      question_number: index + 1,
+      prompt: question.prompt || question.text,
+      options_json: question.options,
+      correct_answer_index: Number(question.correctAnswerIndex || 0),
+    }));
+
+    const { error: deleteQuestionsError } = await client.from('quiz_questions').delete().eq('quiz_id', data.id);
+    if (deleteQuestionsError) throw new Error(deleteQuestionsError.message);
+
+    if (normalizedQuestions.length) {
+      const { error: questionsError } = await client.from('quiz_questions').insert(normalizedQuestions);
+      if (questionsError) throw new Error(questionsError.message);
+    }
+  }
+
   await recordAudit(record.id ? 'Quiz edited' : 'Quiz created', 'Quiz', data.title, data.id);
   return (await getQuizzes()).find((quiz) => quiz.id === data.id);
 }
